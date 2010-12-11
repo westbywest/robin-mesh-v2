@@ -1,0 +1,27 @@
+config mesh iface
+	option ifname     wlan0
+	option net        5
+	option prefix     8
+	option bssid      02:ca:ff:ee:ba:be
+		
+config mesh ap	
+	option ifname     wlan1
+	option up         1
+	option net        101
+	option prefix     24
+	option ssid       RobinMesh
+	option encryption none
+	option key        robinmesh   
+		
+config mesh Myap	
+	option ifname     wlan2
+	option up         0
+	option net        102
+	option prefix     24	
+	option ssid       MyRobinMesh
+	option encryption psk
+	option key        flyrobinfly
+	
+config mesh hna
+	option announce   1
+#

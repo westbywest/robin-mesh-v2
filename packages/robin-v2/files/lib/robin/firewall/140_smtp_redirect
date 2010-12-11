@@ -1,0 +1,24 @@
+#!/bin/sh
+#SMTP redirect
+
+SMTP_rdir=$(uci get iprules.filter.SMTP_rdir)
+
+get_ifaces() {
+	case $cp_HANDLER in
+		4|5|6) AP1_iface=tun0 ;;
+		*) AP1_iface=$(uci get cp_switch.main.iface) ;;
+	esac
+}
+
+[ 1 -eq "$SMTP_rdir" ] && {
+	echo "applying prerouting rules..."
+
+	SMTP_dest=$(uci get iprules.filter.SMTP_dest)
+	get_ifaces
+
+	ipt -I PREROUTING -t nat -i $AP1_iface  -p tcp --dport 25 -j DNAT --to "${SMTP_dest}:25"
+	if [ 1 -eq "$(uci get mesh.Myap.up)" ] ; then
+		AP2_iface=$(uci -P /var/state get wireless.private.ifname)
+		ipt -I PREROUTING -t nat -i $AP2_iface -p tcp --dport 25 -j DNAT --to "${SMTP_dest}:25"
+	fi
+}

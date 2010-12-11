@@ -1,0 +1,29 @@
+#!/bin/sh
+# network healthy
+
+SHOULD_BLOCK=$(uci get iprules.filter.port_block)
+
+if [ 1 -eq "$SHOULD_BLOCK" ]; then 
+	BLACK_LIST_PORTS=/etc/blacklist/ports
+	IPTABLES=$(which iptables)
+	IPTABLES="${IPTABLES} -A FORWARD"
+
+	cat $BLACK_LIST_PORTS |grep -v '^#' > /tmp/blacklist_ports
+	[ -s /tmp/blacklist_ports ] && {
+		while read RECORD ; do
+			PROTOCOL=$(echo $RECORD |awk '{print $1}')
+			PORT_BEING_BLOCKED=$(echo $RECORD |awk '{print $2}' |tr -cd '[0-9]')
+
+			[ -n "$PORT_BEING_BLOCKED" ] || continue
+
+			[ "$PORT_BEING_BLOCKED" -gt 0 -a "$PORT_BEING_BLOCKED" -le 65535 ] && {
+				case $PROTOCOL in
+					'tcp'|'TCP') $IPTABLES -p tcp --dport $PORT_BEING_BLOCKED -j DROP ;;
+					'udp'|'UDP') $IPTABLES -p udp --dport $PORT_BEING_BLOCKED -j DROP ;;
+					*) : ;; #no-op 
+				esac
+			}
+		done < /tmp/blacklist_ports
+	}
+fi
+#

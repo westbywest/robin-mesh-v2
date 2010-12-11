@@ -1,0 +1,14 @@
+#!/bin/sh
+#memory_test
+
+REASON=22
+LOW_MEMORY=500
+
+for pid in $(ps aux | awk '$4=="Z" {print $1}') ; do
+	kill -9 $pid
+done
+
+echo "checking free memory..."
+[ "$(free |grep 'Mem:' |awk '{print $2}')" -gt 20000 ] && LOW_MEMORY=4000
+[ "$(free |grep 'Mem:' |awk '{print $4}')" -lt "$LOW_MEMORY" ] && /sbin/do_reboot $REASON
+

@@ -1,0 +1,7 @@
+config radio channel
+	option auto      0
+	option default	 5
+	option current   5
+	option alternate 5
+	option tts       0
+#

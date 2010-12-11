@@ -1,0 +1,90 @@
+#!/bin/sh 
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# /sbin/update 
+
+. /lib/robin/last-hop.sh
+. /lib/robin/checkin-functions.sh
+. /lib/robin/plugins.sh
+
+exit_ok() {
+	touch /var/state/checkin
+	exit
+}
+
+request_full_reply() {
+	uci set flags.status.RR="1"
+	uci commit flags 
+	exit
+}
+
+if [ "$node_role" -eq 0 ] ; then 
+	#should be run by dashboard_checkin.sh - we assume that /tmp/gateway exists
+	[ -e /tmp/current_gateway ] || {
+		echo "should be run by dashboard_checkin.sh. Exiting" 
+		exit 1
+	}
+
+	#this should never happen:
+	grep -q '^0' /tmp/current_gateway && exit 1
+fi	
+
+run_plugins checkin
+
+checkin_dashboard
+[ 1 -eq "$(uci get pomade.client.enabled)" ] && checkin_pomade
+
+if [ -s "$DASHBOARD_REPLY" ]; then
+	cat $DASHBOARD_REPLY |grep -q '#@#' || request_full_reply
+	cp -f $DASHBOARD_REPLY $OLD_REPLY
+
+else 
+	[ -s "$OLD_REPLY" ] || request_full_reply
+	cat $OLD_REPLY |grep -q '#@#' || request_full_reply
+fi
+
+pre_process_reply $OLD_REPLY
+update_UCI
+
+custom_update
+heartbeat
+
+if [	"$(uci get flags.restart.node)" -eq 1 -o \
+	"$(uci get flags.restart.system)" -eq 1 ]; then
+
+	/sbin/do_reboot $REASON
+	exit
+fi
+
+if [ "$(uci get flags.restart.cps)" -eq 1 ]; then
+	logger -st ${0##*/} "restart the captive portal"
+	for i in /var/run/rc.c/K*; do
+		$i stop 2>&1
+	done 
+	sleep 3
+	for i in /var/run/rc.c/S*; do
+		$i start 2>&1
+	done
+
+	uci set flags.restart.cps=0 ; uci commit flags
+fi
+
+exit_ok
+#

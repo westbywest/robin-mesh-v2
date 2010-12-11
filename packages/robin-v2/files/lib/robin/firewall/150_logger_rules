@@ -1,0 +1,29 @@
+#!/bin/sh
+#logger_rules 
+
+if [ "$LOG" -gt 0 -a "$node_role" -eq 1 ]; then
+	echo "setting up logger rules..."
+
+	LOG_RATE=0
+	HN=$(uname -n |awk '{pippo = substr($1, 1, 19) ; print pippo}')
+	LOG_PREFIX="${HN}-->inet: "
+	TRACK="LOG --log-level debug --log-prefix $LOG_PREFIX" 
+
+	[ "$LOG_RATE" -gt 0 ] && LIMIT="-m limit --limit ${LOG_RATE/seconds}" || LIMIT=
+
+	iptables -nv -t nat -L LOGGER 2>/dev/null || iptables -t nat -N LOGGER
+
+	ipt -A LOGGER -t nat -o $WAN_PORT -s ${AP1_net}.0.0.0/8 $LIMIT -j $TRACK
+	ipt -A LOGGER -t nat -o $WAN_PORT -s ${AP2_net}.0.0.0/8 $LIMIT -j $TRACK
+
+	[ 1 -eq "$LOG" ] && {
+		LOG_SERVER_PATH=$(uci get iprules.filter.log_server)
+
+		kill -9 $(pidof klogd)
+		kill -9 $(pidof syslogd)
+	
+		syslogd -C16 -R $LOG_SERVER_PATH 
+		klogd
+	}
+fi
+#

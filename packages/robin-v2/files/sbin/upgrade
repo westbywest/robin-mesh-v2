@@ -1,0 +1,6 @@
+#!/bin/sh 
+
+do_not_upgrade() { exit 0; }
+
+do_not_upgrade
+#

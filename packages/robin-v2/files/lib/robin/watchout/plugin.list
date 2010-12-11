@@ -1,0 +1,6 @@
+10_wifi
+20_memory
+30_udhcpc
+40_olsrd
+50_captive_portal
+60_dnsmasq

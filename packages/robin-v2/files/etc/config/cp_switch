@@ -1,0 +1,83 @@
+config cp_switch main
+	option iface					 	      
+	option iface_ip		
+	option iface_net		
+	option iface_mask	
+	option start_lease	
+	option which_handler 0
+	
+config cp_switch handler_1
+	option provider       nodogsplash
+	option cp_name        n
+	option config_script  nodogsplash
+	option rc_script      nodogsplash
+	option update_script  nodog	
+	option status_script  nodogsplash
+	option need_heart     0
+	option heartbeat      none
+	option need_sync      0
+	option has_dhcpd      0
+	option max_threads    0	  	
+	option run_iprules    'post'
+	option page_id        0
+		
+config cp_switch handler_4
+	option provider       wifiCPA
+	option cp_name        c
+	option config_script  chilli
+	option rc_script      coovachilli 
+	option update_script  chilli	
+	option status_script  chilli	
+	option need_heart     1
+	option heartbeat      'wificpaheartbeat'	
+	option need_sync      1	
+	option has_dhcpd      1	
+	option max_threads    6
+	option run_iprules   'post'
+	option page_id        0
+
+config cp_switch handler_5
+	option provider       CoovaChilli
+	option cp_name        C
+	option config_script  chilli
+	option rc_script      coovachilli 
+	option update_script  chilli	
+	option status_script  chilli	
+	option need_heart     0
+	option heartbeat      none	
+	option need_sync      1	
+	option has_dhcpd      1
+	option max_threads    6	
+	option run_iprules    'post'
+	option page_id        0
+
+config cp_switch handler_6
+	option provider       otherChilli
+	option cp_name        o
+	option config_script  chilli
+	option rc_script      coovachilli 
+	option update_script  chilli	
+	option status_script  chilli	
+	option need_heart     0
+	option heartbeat      none	
+	option need_sync      1	
+	option has_dhcpd      1	
+	option max_threads    6
+	option run_iprules    'post'
+	option page_id        0
+	
+config cp_switch handler_0
+	option provider       nocp
+	option cp_name        x
+	option config_script  nocp
+	option rc_script      nocp
+	option update_script  nocp	
+	option status_script  nocp
+	option need_heart     0
+	option heartbeat      none
+	option need_sync      0
+	option has_dhcpd      0
+	option max_threads    0	  	
+	option run_iprules    'post'
+	option page_id        0	
+#

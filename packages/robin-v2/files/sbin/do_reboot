@@ -1,0 +1,81 @@
+#!/bin/sh 
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# /sbin/do_reboot (pointed by /sbin/reboot)
+
+REASON=$1
+[ -n "$REASON" ] || REASON="00"
+
+minDiff() {
+	min1=$(crontab -l |grep "upgrade" |awk '{print $1}') #upgrade minute
+	min2=$(date |awk '{print $4}' |awk -F: '{print $2}') #minute now
+	diffMin=$((min1-min2))
+	if [ "$diffMin" -lt 0 ]; then 
+		timeout=$(echo $min1 $min2 |awk '{print 60*(60-$2+$1)}')
+		else 
+		timeout=$(echo $diffMin |awk '{print $1*60}')
+	fi
+	echo $((timeout+120))
+}
+
+auto_reboot() { #give the canche to upgrade before to reboot the node
+	rebootTimeout=$(minDiff)
+	reboot_file=$(mktemp /tmp/rebootme.XXXXXX)
+
+cat > $reboot_file  << eof_reboot_file
+#!/bin/sh
+sleep $rebootTimeout
+echo $REASON >> /etc/reboot_reasons
+/sbin/REBOOT $REASON
+eof_reboot_file
+			
+	touch /tmp/rebooting #no further rebootme file	
+	logger -st ${0##*/} "node will reboot in $rebootTimeout seconds"
+	chmod +x "$reboot_file"
+	sh "$reboot_file" &  
+
+	ps |grep $reboot_file |grep -v grep |awk '{print $1}' > /var/run/rebootme.pid
+}
+
+#main
+[ "$(cat /etc/reboot_reasons |wc -l)" -gt 200 ] && {
+	tail -20 /etc/reboot_reasons > /tmp/a
+	cp -f /tmp/a /etc/reboot_reasons
+}
+
+case $REASON in
+	32|35) 		
+		[ -e /tmp/rebooting ] ||	auto_reboot 
+		exit 
+		;;	
+	*)
+		ERROR=$(cat /etc/reasons | grep $REASON)
+		echo -e "$REASON \t $(date) \t $ERROR" >>  /etc/reboot_reasons
+
+		echo -e "$REASON \t $(date) \t $ERROR" > /etc/LAST_REBOOT
+		echo "+---" >> /etc/LAST_REBOOT
+		ps >> /etc/LAST_REBOOT
+		logread >> /etc/LAST_REBOOT
+
+		/sbin/REBOOT $REASON
+		;;
+esac
+#
+

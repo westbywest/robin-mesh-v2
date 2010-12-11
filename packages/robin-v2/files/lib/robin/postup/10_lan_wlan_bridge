@@ -1,0 +1,11 @@
+#!/bin/sh 
+
+[ 0 -eq "$(uci get node.general.role)" ] && {
+	ap1_ifname=$(uci -P /var/state get wireless.public.ifname)
+	DEVICES="eth0 ${ap1_ifname}"
+
+	for dev in $DEVICES ; do
+		brctl show | grep "$dev" >/dev/null || brctl addif br-lan "$dev" 2>/dev/null >/dev/null
+	done
+}
+#

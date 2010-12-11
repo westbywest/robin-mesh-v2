@@ -1,0 +1,88 @@
+#!/bin/sh
+
+SHOULD_EXIT=0
+STATUS_FILE=/var/run/status_file
+cp_HANDLER=$(uci get cp_switch.main.which_handler)
+[ 1 -eq "$cp_HANDLER" ] || exit 0
+
+echo "get nodogsplash users/usage report..."
+
+rm -f /tmp/topUsers
+is_unknown="U"
+users=0 ; kbup=0 ; kbdown=0 ; TOP_USERS=
+
+echo "${users} ${kbup} ${kbdown}" >> $STATUS_FILE
+echo "${TOP_USERS}" >> $STATUS_FILE
+
+$(/usr/bin/ndsctl clients > /tmp/nds_clients)
+[ $? -ne 0 ] && SHOULD_EXIT=1
+[ 0 -eq "$(cat /tmp/nds_clients)" ] && SHOULD_EXIT=1
+
+[ 1 -eq "$SHOULD_EXIT" ] && {
+	echo "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
+	echo "&top_users=${TOP_USERS}" >> $STATUS_FILE
+
+	return
+}
+
+cat /tmp/dhcp.leases |tr [*] ['U'] > /tmp/dhcpd.clients.tmp 
+sort -u < /tmp/dhcpd.clients.tmp > /tmp/dhcpd.clients 
+
+#rows to columns
+rm -f /tmp/nds_clients_h
+while read riga ; do #rows to columns
+	case $(echo $riga |awk -F = '{print $1}') in
+		ip|state|downloaded|uploaded) 
+			value=$(echo $riga |awk -F = '{print $2}')
+			record="${record} $value" 
+			;;
+		mac) 
+			value=$(echo $riga |awk -F = '{print $2}' |tr A-Z a-z)
+			record="${record} $value" 
+			;;
+		avg_up_speed) 
+			echo $record >> /tmp/nds_clients_h 
+			record= 
+			;;
+	esac
+done < /tmp/nds_clients
+ 
+#find nds Authenticated users
+
+while read riga ; do 
+	[ "$(echo $riga |awk '{print $3}')" == "Authenticated" ] && {
+		NDS_IP=$(echo $riga |awk '{print $1}')
+		NDS_MAC=$(echo $riga |awk '{print $2}')
+
+		#look up hostname for the given authetnticated IP
+		while read lease ; do	
+			LEASE_IP=$(echo $lease |awk '{print $3}')
+			LEASE_MAC=$(echo $lease |awk '{print $2}' |tr A-Z a-z)
+
+			if [ "$NDS_IP" == "$LEASE_IP" -a "$NDS_MAC" == "$LEASE_MAC" ]; then 	
+				KB_d=$(echo $riga |awk '{print $4}')
+				KB_u=$(echo $riga |awk '{print $5}')
+				KB_t=$(($KB_d+$KB_u))
+
+				hostname=$(echo $lease |awk '{print $4}') 
+				[ "$hostname" == "$is_unknown" ] && client_hostname="unknown" || client_hostname=$hostname
+
+				new_line="${KB_t},${KB_d},${KB_u},${LEASE_MAC},${client_hostname}"	
+				echo $new_line >> /tmp/topUsers
+				users=$(($users + 1)); kbup=$(($kbup + $KB_u)); kbdown=$(($kbdown + $KB_d))				
+			fi
+		done < /tmp/dhcpd.clients
+	}
+done < /tmp/nds_clients_h
+echo "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
+
+if [ -e /tmp/topUsers ] ; then
+	sort -r /tmp/topUsers |head -n 10 > /tmp/sort_topUsers
+	while read riga ; do
+		TOP_USERS="${TOP_USERS}+${riga}" 
+	done < /tmp/sort_topUsers
+fi	
+echo "&top_users=${TOP_USERS}" >> $STATUS_FILE
+#
+
+

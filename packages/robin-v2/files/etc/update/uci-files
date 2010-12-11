@@ -1,0 +1,19 @@
+# /etc/update/uci-files
+#
+# This file is part of the checkin process and lists the order 
+# in which the UCI file are processed by /sbin/update.
+# Please, do not edit unless you know what are you doing.
+#
+cp_switch
+mesh
+wireless
+general
+iprules
+management
+node
+nodes
+radio
+olsr
+nodog
+chilli
+txpower

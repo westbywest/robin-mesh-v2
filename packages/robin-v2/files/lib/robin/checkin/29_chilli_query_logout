@@ -1,0 +1,24 @@
+#!/bin/sh
+
+#cp_HANDLER=$(uci get cp_switch.main.which_handler)
+#
+#[ "$cp_HANDLER" -ge 4 -a "$cp_HANDLER" -le 6 ] && {
+#	UNIX_SOCKET=$(find /var/run -name *sock |grep 'chilli')
+#	logger -st ${0##*/} "=== chilli clients check ==="
+#	chilli_query -s $UNIX_SOCKET list > /var/run/chilli.clients
+#
+#	if [ -s /var/run/chilli.clients ]; then
+#		SKIP_MAC=$(uci get node.general.myMAC |tr a-z A-Z |sed y/:/-/)
+#
+#		while read RECORD ; do	
+#			CLIENT_MAC=$(echo $RECORD |awk '{print $1}')
+#
+#			[ "$CLIENT_MAC" == "$SKIP_MAC" ] || {
+#				CLIENT_IP=$(echo $RECORD |awk '{print $2}')
+#				ping $CLIENT_IP -c1 -W3 -w5 -q > /dev/null || chilli_query -s $UNIX_SOCKET logout $CLIENT_MAC
+#			}
+#		done < /var/run/chilli.clients
+#
+#	fi
+#}
+#

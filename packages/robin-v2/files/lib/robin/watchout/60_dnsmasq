@@ -1,0 +1,25 @@
+#!/bin/sh
+#dnsmasq
+
+echo "checking dnsmasq..."
+REASON=32 
+
+cp_HANDLER=$(uci get cp_switch.main.which_handler)
+case $cp_HANDLER in
+	0) DHCP_instances=2 ;;
+	*) DHCP_instances=1 ;;
+esac
+
+T=0
+while true ; do
+	[ "$(INSTANCES dnsmasq)" -eq "$DHCP_instances" ] && break
+
+	T=$((T + 1 ))
+	[ "$T" -gt 3 ] && /sbin/do_reboot $REASON	
+
+	/etc/init.d/dhcpd stop
+	sleep 1
+	/etc/init.d/dhcpd start
+	sleep 5
+done
+#

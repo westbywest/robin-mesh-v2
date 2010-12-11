@@ -1,0 +1,41 @@
+#!/bin/sh
+# Copyright (C) 2006 OpenWrt.org
+
+arrange_start_list() {
+	UNWANTED_BOOT_SCRIPTS="cron dnsmasq firewall usb defconfig"
+	CP_HANDLER=$(uci get cp_switch.main.which_handler)
+	CP_INIT_SCRIPT=$(uci get cp_switch."handler_${CP_HANDLER}".rc_script)
+
+	rm -f /etc/rc.d/S78*
+	/etc/init.d/${CP_INIT_SCRIPT} enable
+
+	for s in $UNWANTED_BOOT_SCRIPTS ; do	
+		/etc/init.d/"${s}" enabled && /etc/init.d/"${s}" disable 
+	done
+}
+
+run_scripts() {
+	for i in /etc/rc.d/$1*; do
+		[ -x $i ] && $i $2 2>&1
+	done | $LOGGER
+}
+
+if [ $1 == "boot" ]; then
+	[ -d /tmp/root ] && {
+		lock /tmp/.switch2jffs
+		firstboot switch2jffs
+		lock -u /tmp/.switch2jffs
+	}
+fi
+sed -i '/net.ipv4.tcp_ecn=1/d' /etc/sysctl.conf
+
+arrange_start_list
+
+LOGGER="cat"
+[ -x /usr/bin/logger ] && LOGGER="logger -s -p 6 -t sysinit"
+
+if [ "$1" = "S" ]; then
+	run_scripts "$1" "$2" &
+else
+	run_scripts "$1" "$2"
+fi

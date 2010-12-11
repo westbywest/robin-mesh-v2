@@ -1,0 +1,188 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2008  Alina Friedrichsen <x-alina@gmx.net>
+# Special thanks to bittorf wireless ))
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+START=74 #ROBIN boot sequence
+
+config_from_uci() {
+	Pollrate=$(uci get olsr.general.Pollrate)
+	MprCoverage=$(uci get olsr.general.MprCoverage)
+
+	HelloInterval=$(uci get olsr.interface.HelloInterval)
+	HelloValidityTime=$(uci get olsr.interface.HelloValidityTime)
+	TcInterval=$(uci get olsr.interface.TcInterval)
+	TcValidityTime=$(uci get olsr.interface.TcValidityTime)
+	MidInterval=$(uci get olsr.interface.MidInterval)
+	MidValidityTime=$(uci get olsr.interface.MidValidityTime)
+	HnaInterval=$(uci get olsr.interface.HnaInterval)
+	HnaValidityTime=$(uci get olsr.interface.HnaValidityTime)
+
+	SmartGateway=$(uci get olsr.smart_gateway.SmartGateway)
+	uplink=$(uci get olsr.smart_gateway.uplink)
+	downlink=$(uci get olsr.smart_gateway.downlink)
+	SmartGatewaySpeed="${uplink} ${downlink}"
+
+	cat > $CONF_F <<-olsrd_conf
+		DebugLevel 0
+		IpVersion 4
+		AllowNoInt yes
+		Pollrate $Pollrate
+		TcRedundancy 2
+		MprCoverage $MprCoverage
+		LinkQualityFishEye 1
+		LinkQualityWinSize 100
+		LinkQualityDijkstraLimit 0 9.0
+		LinkQualityLevel 2
+		UseHysteresis no
+		NatThreshold $NatThreshold
+
+		Interface "wlan0"
+		{
+			Ip4Broadcast 255.255.255.255
+			HelloInterval $HelloInterval
+			HelloValidityTime $HelloValidityTime
+			TcInterval $TcInterval
+			TcValidityTime $TcValidityTime
+			MidInterval $MidInterval
+			MidValidityTime $MidValidityTime
+			HnaInterval $HnaInterval
+			HnaValidityTime $HnaValidityTime
+		}
+ 
+		LoadPlugin "olsrd_txtinfo.so.0.1"
+		{
+			PlParam "port" "8090"
+			PlParam "Host" "127.0.0.1"
+		}
+
+		SmartGateway $SmartGateway
+
+	olsrd_conf
+
+	case $ROLE in
+		1)
+			echo "SmartGatewayUplink ipv4" >> $CONF_F
+			echo "SmartGatewayUplinkNAT yes" >> $CONF_F
+			echo "SmartGatewaySpeed $SmartGatewaySpeed" >> $CONF_F
+			;;
+
+		0)	echo "SmartGatewayAllowNAT yes" >> $CONF_F ;;
+	esac
+
+}
+
+defaultRoute () {
+	t=0
+	while true ; do
+		if ip route |grep -q default ; then
+			ip route |grep -q default |awk '{print $3}' > /tmp/current_gateway
+			break
+		fi
+		sleep 5
+		t=$((t + 1))
+		if [ "$t" -gt 60 ] ; then
+			/lib/robin/tts-check.sh
+			/sbin/auto-rescue
+		fi
+	done
+}
+
+start() {
+	ROLE=$(uci get node.general.role)
+	USE_APs_HNA=$(uci get mesh.hna.announce)
+
+	case $ROLE in
+		1) OLSRD_CONFIG_SCHEMA="/etc/olsrd.conf.robin_gw"  ;;
+		0) OLSRD_CONFIG_SCHEMA="/etc/olsrd.conf.robin_rpt" ;;
+	esac
+	OLSRD_CONFIG_FILE="/etc/olsrd.conf"
+	CONF_F="/tmp/olsrd.conf"
+
+	UCI_CONFIG=$(uci get olsr.general.UciConfig)
+	[ 1 -eq "$UCI_CONFIG" ] && config_from_uci || cp -f $OLSRD_CONFIG_SCHEMA $CONF_F
+
+	if [ "$ROLE" -eq 1 ] ; then
+
+		echo " " >> "$CONF_F"
+		echo "Hna4" >> "$CONF_F"
+		echo "{" >> "$CONF_F"
+		echo "	0.0.0.0   0.0.0.0" >> "$CONF_F"	
+
+		if [ "$USE_APs_HNA" -eq 1 ] ; then
+			IP=$(uci get node.general.IP_ap)
+			eval $(ipcalc -n $IP)	
+			echo "	$NETWORK   255.255.255.0" >> "$CONF_F"	
+			if [ "$(uci get mesh.Myap.up)" -eq 1 ] ; then
+				IP=$(uci get node.general.IP_Myap)
+				eval $(ipcalc -n $IP)	
+				echo "	$NETWORK   255.255.255.0" >> "$CONF_F"	
+			fi
+		fi	
+		echo "}" >> "$CONF_F"
+
+	else
+	
+		if [ "$USE_APs_HNA" -eq 1 ] ; then
+			echo " " >> "$CONF_F"
+			echo "Hna4" >> "$CONF_F"
+			echo "{" >> "$CONF_F"
+			IP=$(uci get node.general.IP_ap)
+			eval $(ipcalc -n $IP)	
+			echo "	$NETWORK   255.255.255.0" >> "$CONF_F"	
+
+			if [ "$(uci get mesh.Myap.up)" -eq 1 ] ; then
+				IP=$(uci get node.general.IP_Myap)
+				eval $(ipcalc -n $IP)	
+				echo "	$NETWORK   255.255.255.0" >> "$CONF_F"	
+			fi
+			echo "}" >> "$CONF_F"
+		fi
+	fi
+	echo " " >> "$CONF_F"	
+	
+	[ 1 -eq "$(uci get olsr.plugin.load_mdns)" ] && {
+
+		case $cp_HANDLER in
+			4|5|6) AP1_iface=tun0 ;;
+			*) AP1_iface=$(uci get cp_switch.main.iface) ;;
+		esac
+		NON_OLSR_IF=$AP1_iface
+
+		cat >> $CONF_F <<-mDNS_plugin
+
+			LoadPlugin "olsrd_mdns.so.1.0.0"
+			{
+				PlParam     "NonOlsrIf"  "$NON_OLSR_IF"
+			}
+
+		mDNS_plugin
+	}
+	echo >> "$CONF_F"
+
+	cp -f $CONF_F $OLSRD_CONFIG_FILE
+
+	olsrd -f "$OLSRD_CONFIG_FILE" -nofork < /dev/null > /dev/null &
+	[ "$ROLE" -eq 0 ] && defaultRoute
+}
+
+stop() {
+	killall olsrd
+}

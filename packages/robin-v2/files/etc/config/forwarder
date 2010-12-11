@@ -1,0 +1,32 @@
+config forwarder general
+	option enabled 0
+
+config forwarder rule_1
+	option IncomingPort
+	option IPAddr
+	option DstPort
+
+config forwarder rule_2
+	option IncomingPort
+	option IPAddr
+	option DstPort
+
+config forwarder rule_3
+	option IncomingPort
+	option IPAddr
+	option DstPort
+
+config forwarder rule_4
+	option IncomingPort
+	option IPAddr
+	option DstPort
+
+config forwarder rule_5
+	option IncomingPort
+	option IPAddr
+	option DstPort
+
+config forwarder rule_6
+	option IncomingPort
+	option IPAddr
+	option DstPort

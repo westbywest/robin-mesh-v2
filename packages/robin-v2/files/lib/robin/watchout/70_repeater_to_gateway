@@ -1,0 +1,41 @@
+#!/bin/sh
+#repeater_to_gateway
+
+. /lib/robin/last-hop.sh
+
+olsr_gateway_test () {	
+	if ip route get 1.2.3.4 > /dev/null 2>&1 ; then
+		getLastHop 
+		# this is a workaround to find last-hop gateway 
+		#result is evaluated by looking at LAST_HOP provided by getLastHop()
+		#if LAST_HOP value is "0" then getLastHop() failed (see the code of the function)
+		getLastHop_res=$(cat /tmp/current_gateway |awk '{print $1}')
+		[ "0" == "$getLastHop_res" ] && return 1 || return 0
+
+	else
+		return 1
+	fi		
+}
+
+[ "$(uci get node.general.role)" -eq 0 ] && {
+	MAX_ALLOWED_FAILS=$(uci get management.enable.max_w4n_fails)
+	REASON=12
+
+	echo "checking olsrd gateway..."
+	olsr_gateway_test
+	gateway_test_result=$? 
+
+	if [ "$gateway_test_result" -eq 0 ] ; then	
+		cat /tmp/current_gateway
+		rm -f /tmp/w4n.failures
+		return 0
+
+	else
+		rm -f /tmp/current_gateway
+		echo "mark" >> /tmp/w4n.failures
+		[ "$(cat /tmp/w4n.failures |wc -l)" -gt "$MAX_ALLOWED_FAILS" ] && /sbin/do_reboot $REASON
+		return 1
+	fi
+}
+#
+

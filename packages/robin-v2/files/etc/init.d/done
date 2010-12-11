@@ -1,0 +1,21 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org
+
+START=95
+
+boot() {
+	. /lib/robin/plugins.sh
+
+#	[ -d /tmp/root ] && {
+#		lock /tmp/.switch2jffs
+#		firstboot switch2jffs
+#		lock -u /tmp/.switch2jffs
+#	}
+
+	# process robin endboot commands
+	source_plugins endboot
+
+	# set leds to normal state
+	. /etc/diag.sh
+	set_state done
+}

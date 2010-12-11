@@ -1,0 +1,19 @@
+FirewallRuleSet preauthenticated-users {
+	FirewallRule allow udp port 53
+	FirewallRule allow tcp port 1:79
+	FirewallRule allow tcp port 81:65535
+}
+FirewallRuleSet authenticated-users {
+    FirewallRule allow
+}
+FirewallRuleSet users-to-router {
+    FirewallRule allow udp port 53	
+    FirewallRule allow tcp port 53	
+    FirewallRule allow udp port 67
+    FirewallRule allow tcp port 20
+    FirewallRule allow tcp port 21
+    FirewallRule allow tcp port 22
+    FirewallRule allow tcp port 23
+    FirewallRule allow tcp port 80
+    FirewallRule allow tcp port 443
+}

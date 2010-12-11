@@ -1,0 +1,21 @@
+#!/bin/sh
+
+# udhcpc script edited by Antonio Anselmi <a.anselmi-att-oltrelinux-dott-com>
+
+[ -z "$1" ] && echo "Error: should be called from udhcpc" && exit 1
+
+{ 
+case "$1" in
+	deconfig)
+		# skip
+		;;
+
+	renew|bound)
+		echo "we can get a lease"
+	
+		;;
+esac
+
+} 2>&1 | ( logger -s -p daemon.info -t uhdcp || cat )
+
+exit 0

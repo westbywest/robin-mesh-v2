@@ -1,0 +1,17 @@
+#!/bin/sh
+#olsrd
+
+echo "checking olsrd..."
+REASON=30
+T=0
+
+while  [ "$(INSTANCES olsrd)" -eq 0 ] ; do
+	T=$((T + 1 ))
+	[ "$T" -gt 3 ] && /sbin/do_reboot $REASON	
+	/etc/init.d/olsrd start > /dev/null 2>&1 
+		sleep 5
+done	
+
+REASON=36
+[ "$(INSTANCES olsrd)" -gt 1 ] && /sbin/do_reboot $REASON			
+#

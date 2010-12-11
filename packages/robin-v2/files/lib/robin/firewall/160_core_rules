@@ -1,0 +1,70 @@
+#!/bin/sh 
+#core rules
+
+#------------------------------------------------------------------------------------------------#
+# INPUT RULES (connections with the router as destination)
+#------------------------------------------------------------------------------------------------#	
+echo "applying input rules..."
+ipt -I INPUT -p ICMP --icmp-type 8 -j ACCEPT	
+ipt -I INPUT -p gre -j ACCEPT	
+ipt -I INPUT -p udp --destination-port 67:68 --source-port 67:68 -j ACCEPT
+ipt -I INPUT -p tcp --destination-port 22 -j ACCEPT	
+ipt -I INPUT -p tcp --destination-port 8080 -j ACCEPT
+
+#------------------------------------------------------------------------------------------------#
+# FORWARDING RULES (connections routed through the router)
+#------------------------------------------------------------------------------------------------#
+if [ "$AP1_isolation" -eq 1 ] ; then #block AP to AP packets
+	echo "applying AP isolation..."
+	ipt -I FORWARD -i $AP1_iface -d "${AP1_net}.0.0.0/8" -j DROP
+	[ "$(uci get mesh.Myap.up)" -eq 1 -a "$AP2_isolation" -eq 1 ] && {
+		ipt -I FORWARD -i $AP2_iface -d "${AP2_net}.0.0.0/8" -j DROP
+	}
+fi
+
+#------------------------------------------------------------------------------------------------#
+# POSTROUTING (SNAT and MASQUERADING) masquerade outgoing pakets at internet gateway
+#------------------------------------------------------------------------------------------------#
+if [ "$node_role" -eq 1 ] ; then
+	echo "postrouting and masquerading..."
+	[ "$LOG" -gt 0 ] && ipt -A POSTROUTING -t nat -o $WAN_PORT -j LOGGER
+	ipt -A POSTROUTING -t nat -o $WAN_PORT -j MASQUERADE	
+fi
+
+#------------------------------------------------------------------------------------------------#
+# LAN block	
+#------------------------------------------------------------------------------------------------#
+if [ "$LAN_block" -gt 0 -a "$node_role" -eq 1 ] ; then 
+echo "applying lan-block rules..."
+#OUTPUT 				
+	#drop traffic from/to 
+	for IP_SPACE in $(cat $BLACKLIST |grep -v ^# |awk '{print $1}') ; do
+		ipt -I OUTPUT $source_addr -d $IP_SPACE -j DROP
+	done
+	for IP_SPACE in $lan_IP $inetRouter_IP ; do
+		ipt -I OUTPUT $source_addr -d $IP_SPACE -j DROP
+	done
+	#allow traffic from/to 
+	[ 1 -eq "$pmde_onLan" ] && ipt -I OUTPUT -d $pmde_IP -j ACCEPT
+	[ 1 -eq "$dashboard_onLan" ] && ipt -I OUTPUT -d $dashboard_IP -j ACCEPT
+	[ 1 -eq "$proxy_onLAN" ] && ipt -I OUTPUT -p tcp -d $proxy_IP --destination-port $proxy_port -j ACCEPT
+	ipt -I OUTPUT -p tcp --source-port 22 -j ACCEPT	
+	ipt -I OUTPUT -p udp --destination-port 67:68 --source-port 67:68 -j ACCEPT	
+	ipt -I OUTPUT -p udp --destination-port 53 -j ACCEPT	
+#FORWARDING 
+	for IFACE in $AP1_iface $AP2_iface $MeshBackbone_iface ; do
+	#drop traffic from/to 
+		for IP_SPACE in $(cat $BLACKLIST |grep -v ^# |awk '{print $1}') ; do
+			ipt -I FORWARD -i $IFACE $source_addr -d $IP_SPACE -j DROP
+		done
+		for IP_SPACE in $lan_IP $inetRouter_IP ; do
+			ipt -I FORWARD -i $IFACE $source_addr -d $IP_SPACE -j DROP
+		done
+	#allow traffic from/to
+		[ "$dashboard_onLan" -eq 1 ] && ipt -I FORWARD -i $IFACE -d $dashboard_IP -j ACCEPT
+		[ 1 -eq "$proxy_onLAN" ] && ipt -I OUTPUT -i $IFACE -p tcp -d $proxy_IP --destination-port $proxy_port -j ACCEPT
+		ipt -I FORWARD -i $IFACE -d $this_GATEWAY -j ACCEPT	
+		ipt -I FORWARD -i $IFACE -p udp --destination-port 53 -j ACCEPT	
+	done
+fi
+#

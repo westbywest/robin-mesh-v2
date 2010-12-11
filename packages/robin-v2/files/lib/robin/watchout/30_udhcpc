@@ -1,0 +1,28 @@
+#!/bin/sh
+#udhcpc_test
+
+check_udhcpc() {
+	echo "checking udhcpc..."
+	REASON=34
+	T=0
+	WAN_PORT=$(uci get node.general.wanPort)
+
+ 	while  [ "$(ps |grep 'udhcpc' | grep -v grep | wc -l)" -eq 0 ] ; do
+		T=$((T + 1 ))
+		[ "$T" -gt 3 ] && /sbin/do_reboot $REASON	
+		/sbin/udhcpc -i $WAN_PORT -t 10 -n -s /usr/share/udhcpc/robin.script 
+	 	sleep 5
+	done
+	[ "$(ps |grep 'udhcpc' | grep -v grep | wc -l)" -gt 1 ] && /sbin/do_reboot $REASON	
+
+	REASON=25
+	subnet_lease=$(ifconfig $WAN_PORT |grep 'inet'|awk '{print $2}' |awk -F: '{print $2}')
+	subnet_lease=$(echo $subnet_lease | awk -F. '{print $1}')
+	[ "$subnet_lease" -eq 101 ] && /sbin/do_reboot $REASON
+}
+
+[ "$(uci get node.general.role)" -eq 1 ] && {
+	PREDEF_ROLE=$(uci get installation.node.predef_role)
+	[ 2 -eq "$PREDEF_ROLE" ] || check_udhcpc
+}
+#

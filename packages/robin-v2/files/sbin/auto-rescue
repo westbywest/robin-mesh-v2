@@ -1,0 +1,95 @@
+#!/bin/sh
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+#/sbin/auto-rescue
+
+set_channel () {
+	local CHANNEL=$1
+	REASON=13
+	uci set radio.channel.current=$CHANNEL
+	uci set radio.channel.alternate=$CHANNEL	
+	uci set radio.channel.tts="0"		 
+	uci commit radio
+
+	/sbin/do_reboot $REASON
+}
+
+[ 1 -eq "$(uci get node.general.role)" ] && exit
+
+/etc/init.d/timing stop
+chan=$(iwgetid -rc ath0)
+
+#scan the air
+iwlist ath0 scan | /usr/bin/scanparser |sort |tr [#] [' '] > /tmp/onair1
+sleep 3
+iwlist ath0 scan | /usr/bin/scanparser |sort |tr [#] [' '] > /tmp/onair2
+sleep 3
+iwlist ath0 scan | /usr/bin/scanparser |sort |tr [#] [' '] > /tmp/onair3
+sleep 3
+iwlist ath0 scan | /usr/bin/scanparser |sort |tr [#] [' '] > /tmp/onair4
+# and get best results
+rm -f /tmp/scan_results
+scans1=$(cat /tmp/onair1 |wc -l)
+echo "$scans1  /tmp/onair1" >> /tmp/scan_results
+scans2=$(cat /tmp/onair2 |wc -l)
+echo "$scans2  /tmp/onair2" >> /tmp/scan_results
+scans3=$(cat /tmp/onair3 |wc -l)
+echo "$scans3  /tmp/onair3" >> /tmp/scan_results
+scans4=$(cat /tmp/onair4 |wc -l)
+echo "$scans4  /tmp/onair4" >> /tmp/scan_results
+ONAIR=$(cat /tmp/scan_results |sort -nr |head -n 1 | awk '{print $2}')
+
+# forgot previous "channel switch" ?
+cur_channel=$(uci get radio.channel.current)
+alt_channel=$(uci get radio.channel.alternate)
+if ! [ "$cur_channel" -eq "$alt_channel" ] ; then		
+	uci set radio.channel.current=$alt_channel
+	uci set radio.channel.tts="0"		 
+	uci commit radio
+	REASON=13 ; /sbin/do_reboot $REASON
+	sleep 30
+fi
+
+if [ -s /etc/update/network_nodes ] ; then
+	while read gateway ; do
+		ROLE=$(echo $gateway |awk '{print $1}')
+		[ "$ROLE" == "G" ] && {
+			gateway_mac=$(echo $gateway |awk '{print $2}' |sed s/00:/06:/ |tr a-z A-Z)
+			while read scansione ; do
+				onair_mac=$(echo $scansione |awk '{print $1}')
+				if [ "$gateway_mac" == "$onair_mac" ] ; then
+					onair_chan=$(echo $scansione |awk '{print $4}')
+					[ "$onair_chan" == "$chan" ] || set_channel $onair_chan
+				fi	
+			done < $ONAIR
+		}
+	done < /etc/update/network_nodes
+fi
+
+while read scansione ; do
+	onair_mac=$(echo $scansione |awk -F: '{print$1}'| awk '{print substr($1,1,3)}')
+	[ "$onair_mac" == "00" ] && continue
+	onair_chan=$(echo $scansione |awk '{print $4}')
+	[ "$onair_chan" == "$chan" ] || set_channel $onair_chan
+done < $ONAIR
+
+/sbin/do_reboot
+#
+

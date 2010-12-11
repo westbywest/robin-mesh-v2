@@ -1,0 +1,16 @@
+00_installation_check.sh
+10_hw_watchdog.sh
+15_wake-slowly.sh
+20_network.sh
+22_rseolv_conf.sh
+30_time_zone.sh
+35_banner.sh
+40_blank_flags.sh
+45_boot_log.sh
+50_set_channel.sh
+55_detect_role.sh
+60_settings.sh
+72_country_code.sh
+80_config.sh
+90_hostname.sh
+90_olsrd_version.sh

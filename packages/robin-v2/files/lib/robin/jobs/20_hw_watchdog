@@ -1,0 +1,9 @@
+#!/bin/sh
+#hw_watchdog
+
+[ "$(uci get node.general.hw_watchdog)" -eq 1 ] && {
+	crontab -l > /tmp/crontab
+	echo "0-59/3	*	*	*	* /sbin/hw-heartbeat.sh" >> /tmp/crontab		
+	cat /tmp/crontab | crontab - 2>&-
+}
+#

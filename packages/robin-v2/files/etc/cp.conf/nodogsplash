@@ -1,0 +1,32 @@
+#!/bin/sh 
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# /etc/cp.conf/nodogsplash
+# nodogsplash configurator script
+
+captive_iface=$(uci get cp_switch.main.iface)
+
+cp -f /etc/cp.conf/nodogsplash.header /tmp/nodog.conf
+cat /etc/cp.conf/nodogsplash.body >> /tmp/nodog.conf
+
+echo "GatewayInterface " $captive_iface >> /tmp/nodog.conf
+
+cp -f /tmp/nodog.conf /etc/nodogsplash/nodogsplash.conf		
+#

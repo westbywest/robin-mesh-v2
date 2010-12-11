@@ -1,0 +1,45 @@
+#!/bin/sh
+
+WAN_PORT=$(uci get node.general.wanPort)
+
+stop_node() {
+		killall -9 dnsmasq 
+		killall -9 hostapd 
+
+	for i in /etc/rc.c/K*
+		do
+		$i stop >/dev/null 2>&1 
+		done 
+
+	if brctl show |grep -q 'br-lan'
+		then
+		ifconfig br-lan down
+		brctl delbr br-lan
+		fi
+
+	for s in "timing httpd olsrd iprules network"
+		do
+		/etc/init.d/$s stop  >/dev/null 2>&1
+		done
+}
+
+[ 1 -eq "$(uci get node.general.role)" ] || exit 1
+stop_node
+
+ifconfig $WAN_PORT up
+iptables -I INPUT -i $WAN_PORT  -p udp --destination-port 67:68 --source-port 67:68 -s 101.0.0.0/8 -j DROP
+
+attempt=0
+while true
+	do
+
+	/sbin/udhcpc -i $WAN_PORT -t 10 -n -s /usr/share/udhcpc/robin.script
+	[ "$?" -eq 0 ] && /sbin/REBOOT
+
+	attempt=$((attempt + 1))
+	[ "$attempt" -gt 360 ] && /sbin/REBOOT
+
+	sleep 10
+	done
+
+#

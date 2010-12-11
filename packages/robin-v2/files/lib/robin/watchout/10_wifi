@@ -1,0 +1,9 @@
+#!/bin/sh
+#wifi_test
+
+echo "checking wifi.." 
+REASON=23
+
+[ 1 -eq "$(uci -P /var/state get wireless.mesh.up)" ] || /sbin/do_reboot $REASON
+#
+

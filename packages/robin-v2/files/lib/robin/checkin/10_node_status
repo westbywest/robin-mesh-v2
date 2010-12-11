@@ -1,0 +1,46 @@
+#!/bin/sh
+
+STATUS_FILE=/var/run/status_file
+KERNEL=$(uci get node.general.kernel)
+BOARD=$(uci get node.general.board)
+cp_HANDLER=$(uci get cp_switch.main.which_handler)
+RR=$(uci get flags.status.RR)
+IP=$(uci get node.general.IP_mesh)
+
+robin_version=$(cat /etc/robin_version)
+
+echo "get node status..."
+rm -f $STATUS_FILE
+
+case $BOARD in
+	"bullet-m"|"nanostation-m"|"rocket-m") MAC_TO_SEND=$(uci get node.general.wlanMAC) ;;
+	*) MAC_TO_SEND=$(uci get node.general.myMAC) ;;
+esac
+
+robin_version="${robin_version}-${KERNEL}"
+
+cp_name=$(uci get cp_switch."handler_${cp_HANDLER}".cp_name)
+
+ra_signature="O"
+RA_VER=$(cat /etc/olsr_version)
+
+ROBIN_VER="${robin_version}/${cp_name}${ra_signature}"
+	
+PSSID="-none-"
+case $(uci get node.general.ethPorts) in
+	2) 	SSID=$(uci get wireless.@wifi-iface[1].ssid) 
+		[ "$(uci get mesh.Myap.up)" -eq 1 ] && PSSID=$(uci get wireless.@wifi-iface[2].ssid)
+		;;
+	1) 	SSID=$(uci get wireless.public.ssid) 
+		[ "$(uci get mesh.Myap.up)" -eq 1 ] && PSSID=$(uci get wireless.private.ssid)
+		;;
+esac
+
+[ 1 -eq "$RR" ] && {
+	uci set flags.status.RR="0"
+	uci commit flags
+}
+
+echo "ip=${IP}&mac=${MAC_TO_SEND}&robin=${ROBIN_VER}&batman=${RA_VER}" > $STATUS_FILE
+echo "&ssid=${SSID}&pssid=${PSSID}&RR=${RR}">> $STATUS_FILE
+#

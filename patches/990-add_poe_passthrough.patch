@@ -1,0 +1,21 @@
+--- a/arch/mips/ar71xx/mach-ubnt.c	2010-08-04 11:25:28.000000000 +0200
++++ b/arch/mips/ar71xx/mach-ubnt.c	2010-08-11 16:52:15.000000000 +0200
+@@ -37,6 +37,7 @@
+ #define UBNT_M_GPIO_LED_L3	11
+ #define UBNT_M_GPIO_LED_L4	7
+ #define UBNT_M_GPIO_BTN_RESET	12
++#define UBNT_M_GPIO_POE 8
+ 
+ #define UBNT_BUTTONS_POLL_INTERVAL	20
+ 
+@@ -97,6 +98,10 @@
+ 		.name		= "ubnt:green:link4",
+ 		.gpio		= UBNT_M_GPIO_LED_L4,
+ 		.active_low	= 0,
++   }, {
++      .name        = "ubnt:poe",
++      .gpio        = UBNT_M_GPIO_POE,
++      .active_low    = 0,		
+ 	}
+ };
+ 

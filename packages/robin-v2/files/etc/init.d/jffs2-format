@@ -1,0 +1,11 @@
+#!/bin/sh
+
+[ $1 == "boot" ] || exit
+
+[ -d /tmp/root ] && {
+	lock /tmp/.switch2jffs
+	firstboot switch2jffs
+	lock -u /tmp/.switch2jffs
+}
+
+sed -i '/net.ipv4.tcp_ecn=1/d' /etc/sysctl.conf

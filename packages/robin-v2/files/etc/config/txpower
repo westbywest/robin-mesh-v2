@@ -1,0 +1,6 @@
+config 'txpower' 'an'
+	option 'dbm' '17'
+
+config 'txpower' 'gn'
+	option 'dbm' '17'
+
