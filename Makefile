@@ -37,8 +37,8 @@ endif
 all: owrt_checkout apply_owrt_patches add_packages build_fw
 
 owrt_checkout:
-	#svn co svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
-	svn co -r 23581 svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
+	svn co svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
+	#svn co -r 23581 svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
 	touch $@
 
 apply_owrt_patches:
