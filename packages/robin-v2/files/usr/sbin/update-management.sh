@@ -253,6 +253,7 @@ while read riga ; do
 			;;
 
 			"enable.local_domain")
+				[ -n "$VALUE" ] || VALUE="-"
 				CURRENT_VALUE=$(uci get ${option})
 				[ "$CURRENT_VALUE" = "$VALUE" ] || {
 					uci set $option=$VALUE

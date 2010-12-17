@@ -21,7 +21,7 @@ config management enable
 	option proxy             0
 	option httpd_auth        2
 	option httpd_passwd      
-	option local_domain
+	option local_domain     '-' 
 	option lwp_over_dash     0
 	option stand_alone_mode	0
 	option sag_mode_interval 0
