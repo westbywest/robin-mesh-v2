@@ -35,7 +35,7 @@ dnsmasq_header() {
 	echo "dhcp-authoritative" >> $DNSMASQ_CONF
 
 	LOCAL_DOMAIN=$(uci get management.enable.local_domain)
-	[ -n "$LOCAL_DOMAIN" ] && echo "domain=$LOCAL_DOMAIN" >> $DNSMASQ_CONF
+	[ "$LOCAL_DOMAIN" == "-" ] || echo "domain=$LOCAL_DOMAIN" >> $DNSMASQ_CONF
 }
 
 dnsmasq_body() {	
@@ -89,6 +89,7 @@ start () {
 
 	DNSMASQ_CONF=/tmp/dnsmasq.conf
 	DNSMASQ_OPTIONS=" --resolv-file=/etc/resolv.conf"
+	[ -s /etc/ethers ] && DNSMASQ_OPTIONS=" --read-ethers ${DNSMASQ_OPTIONS}"
 
 	IFACES=
 	if [ 1 -eq "$has_dhcpd" ] ; then 
