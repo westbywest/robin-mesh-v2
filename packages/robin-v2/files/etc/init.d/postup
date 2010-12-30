@@ -25,6 +25,7 @@ START=73
 boot() {
 	. /lib/robin/plugins.sh
 
+	iptables -I INPUT -p tcp --destination-port 22 -j ACCEPT
 	source_plugins postup
 }
 #
