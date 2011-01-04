@@ -51,6 +51,8 @@ echo "applying lan-block rules..."
 	ipt -I OUTPUT -p tcp --source-port 22 -j ACCEPT	
 	ipt -I OUTPUT -p udp --destination-port 67:68 --source-port 67:68 -j ACCEPT	
 	ipt -I OUTPUT -p udp --destination-port 53 -j ACCEPT	
+	ipt -I OUTPUT -p tcp --destination-port 53 -j ACCEPT
+
 #FORWARDING 
 	for IFACE in $AP1_iface $AP2_iface $MeshBackbone_iface ; do
 	#drop traffic from/to 
@@ -64,7 +66,8 @@ echo "applying lan-block rules..."
 		[ "$dashboard_onLan" -eq 1 ] && ipt -I FORWARD -i $IFACE -d $dashboard_IP -j ACCEPT
 		[ 1 -eq "$proxy_onLAN" ] && ipt -I OUTPUT -i $IFACE -p tcp -d $proxy_IP --destination-port $proxy_port -j ACCEPT
 		ipt -I FORWARD -i $IFACE -d $this_GATEWAY -j ACCEPT	
-		ipt -I FORWARD -i $IFACE -p udp --destination-port 53 -j ACCEPT	
+		ipt -I FORWARD -i $IFACE -p udp --destination-port 53 -j ACCEPT
+		ipt -I FORWARD -i $IFACE -p tcp --destination-port 53 -j ACCEPT	
 	done
 fi
 #
