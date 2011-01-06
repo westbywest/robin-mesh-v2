@@ -31,7 +31,19 @@ use_public_dns() {
 		3) PUBLIC_DNS="google" ;;
 		4) PUBLIC_DNS="scrubit" ;;
 		5) PUBLIC_DNS="dnsadvantage" ;;
-		*) PUBLIC_DNS="opendns" ;;
+		0) 
+			if [ 1 -eq "$(uci get node.general.role)" ]; then
+				PUBLIC_DNS="DHCP provided DNS" 
+				cat /tmp/resolv.conf.dhcp > /tmp/resolv.conf
+				echo "nameserver 127.0.0.1" >> tmp/resolv.conf
+
+				echo "use $PUBLIC_DNS"
+				return
+
+			else
+				PUBLIC_DNS="opendns"
+			fi
+			;;
 	esac
 
 	ns1=$(uci get dns".${PUBLIC_DNS}."nameserver1)

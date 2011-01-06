@@ -40,6 +40,13 @@ Pragma: no-cache
 <td colspan="2">
 
 <fieldset>
+<legend>Name Server</legend>
+Allow to use one of the available public DNS or your ISP' DNS.<br />
+<a href="../cgi-bin/ns.cgi">Go to Name Server Settings</a>
+</fieldset>
+<br>
+
+<fieldset>
 <legend>Gateway Static IP</legend>
 Allows you to set a Static IP for the Gateway where this may be needed.<br /><br />
 <a href="../cgi-bin/staticip.cgi">Go to Gateway Static IP Settings</a>
