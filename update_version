@@ -1,0 +1,11 @@
+#!/bin/sh
+
+robin_makefile="packages-build/robin-v2/Makefile"
+old_robin="PKG_RELEASE:=11n"
+
+VERSION=$(svn info | tail -3 | head -1 | awk '{print $4}')
+new="PKG_RELEASE:=${VERSION}"
+
+sed -e "s/$old_robin/$new/" $robin_makefile > ~/tmp/dum
+cp -f ~/tmp/dum $robin_makefile
+#

@@ -1,8 +1,8 @@
 include $(TOPDIR)/rules.mk
 
-PKG_NAME:=robin-v2
-PKG_REV:=3000
-PKG_VERSION:=r$(PKG_REV)
+PKG_NAME:=robin
+PKG_REV:=2
+PKG_VERSION:=v$(PKG_REV)
 PKG_RELEASE:=11n
 #PKG_BRANCH=test
 
@@ -15,13 +15,13 @@ define Package/robin-v2/Default
   MAINTAINER:=Antonio Anselmi <tony.anselmi@gmail.com>
 endef
 
-define Package/robin-v2
+define Package/robin
 	SECTION:=net
 	CATEGORY:=Network
 	TITLE:=ROBIN Mesh Network
 endef
 
-define Package/robin-v2/description
+define Package/robin/description
 	zero-config mesh network
 endef
 
@@ -34,9 +34,9 @@ endef
 define Build/Compile
 endef
 
-define Package/robin-v2/install
+define Package/robin/install
 	$(INSTALL_DIR) $(1)
 	$(CP) ./files/* $(1)/
 endef
 
-$(eval $(call BuildPackage,robin-v2))
+$(eval $(call BuildPackage,robin))
