@@ -1,7 +1,7 @@
 #
 # Automatically generated make config: don't edit
-# OpenWrt version: Backfire (r24824)
-# Fri Jan  7 11:26:31 2011
+# OpenWrt version: Backfire (r24965)
+# Fri Jan 14 19:00:53 2011
 #
 CONFIG_HAVE_DOT_CONFIG=y
 # CONFIG_TARGET_ppc40x is not set
@@ -1130,9 +1130,9 @@ CONFIG_PACKAGE_crda=y
 # CONFIG_PACKAGE_ebtables-utils is not set
 CONFIG_PACKAGE_fping=y
 # CONFIG_PACKAGE_genl is not set
-CONFIG_PACKAGE_hostapd=y
-# CONFIG_PACKAGE_hostapd-mini is not set
-CONFIG_PACKAGE_hostapd-utils=y
+# CONFIG_PACKAGE_hostapd is not set
+CONFIG_PACKAGE_hostapd-mini=y
+# CONFIG_PACKAGE_hostapd-utils is not set
 # CONFIG_PACKAGE_ifenslave is not set
 CONFIG_PACKAGE_ip=y
 # CONFIG_PACKAGE_ipset is not set
