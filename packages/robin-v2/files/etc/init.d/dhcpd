@@ -83,8 +83,8 @@ start () {
 	mesh_ifname=$(uci -P /var/state get wireless.mesh.ifname)
 
 	case $cp_HANDLER in
-		4|5|6) AP1_IFACE=tun0 ;;
-		*) AP1_IFACE=$(uci get cp_switch.main.iface) ;;
+		4|5|6) AP1_iface=tun0 ;;
+		*) AP1_iface=$(uci get cp_switch.main.iface) ;;
 	esac
 
 	DNSMASQ_CONF=/tmp/dnsmasq.conf
