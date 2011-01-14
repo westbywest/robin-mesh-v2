@@ -48,7 +48,7 @@ config wifi-iface mesh
 	option network  mesh
 	option mode     adhoc
 	option bssid    02:ca:ff:ee:ba:be
-	option ssid     RobinMeshNetwork
+	option ssid     robin.mesh.com
 	option hidden   1
 	option rts      250
 	option frag     256
