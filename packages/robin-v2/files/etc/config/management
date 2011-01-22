@@ -25,5 +25,5 @@ config management enable
 	option lwp_over_dash     0
 	option stand_alone_mode	0
 	option sag_mode_interval 0
-	option country_code      0
+	option country_code      US
 	option public_dns        1
