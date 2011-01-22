@@ -16,8 +16,8 @@
 # 02110-1301, USA
 #
 
-
 OWRT_DIST_SVN_PATH = openwrt/branches/backfire
+
 OWRT_DIST_LOCAL_PATH = openwrt
 OWRT_DIST_SVN_REV = $(shell svn info openwrt/ | tail -3 | head -1 | awk '{print $$4}')
 
@@ -39,8 +39,8 @@ endif
 all: owrt_checkout owrt_patches robin_checkout build_fw
 
 owrt_checkout:
-	svn co svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
-	#svn co -r 23581 svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
+	#svn co svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
+        svn co -r 24824 svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
 	touch $@
 
 owrt_patches:
@@ -58,7 +58,7 @@ robin_checkout:
 	touch $@
 
 apply_patches: 
-	cp $(PATCHES_PATH)/robin-v2-default-config $(OWRT_DIST_LOCAL_PATH)/.config
+	cp $(PATCHES_PATH)/default-config-backfire $(OWRT_DIST_LOCAL_PATH)/.config
 	touch $@
 
 standard_config: apply_patches
