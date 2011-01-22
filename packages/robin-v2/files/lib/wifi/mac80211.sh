@@ -105,11 +105,13 @@ mac80211_hostapd_setup_bss() {
 
 	config_get macaddr "$vif" macaddr
 	config_get_bool hidden "$vif" hidden 0
+	config_get maxassoc "$vif" maxassoc
 	cat >> /var/run/hostapd-$phy.conf <<EOF
 $hostapd_cfg
 wmm_enabled=1
 bssid=$macaddr
 ignore_broadcast_ssid=$hidden
+${maxassoc:+max_num_sta=$maxassoc}
 EOF
 }
 
@@ -161,6 +163,7 @@ scan_mac80211() {
 			*) echo "$device($vif): Invalid mode, ignored."; continue;;
 		esac
 	done
+
 	config_set "$device" vifs "${adhoc:+$adhoc }${ap:+$ap }${sta:+$sta }${monitor:+$monitor }${mesh:+$mesh}"
 #	config_set "$device" vifs "${ap:+$ap }${adhoc:+$adhoc }${sta:+$sta }${monitor:+$monitor }${mesh:+$mesh}"
 }
@@ -412,7 +415,7 @@ detect_mac80211() {
 
 		mode_11n=""
 		mode_band="g"
-		channel="5"
+		channel="11"
 		ht_cap=0
 		for cap in $(iw phy "$dev" info | grep 'Capabilities:' | cut -d: -f2); do
 			ht_cap="$(($ht_cap | $cap))"
