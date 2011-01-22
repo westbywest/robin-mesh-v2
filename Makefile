@@ -39,8 +39,7 @@ endif
 all: owrt_checkout owrt_patches robin_checkout build_fw
 
 owrt_checkout:
-	#svn co svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
-        svn co -r 24824 svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
+	svn co -r 24824 svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
 	touch $@
 
 owrt_patches:
