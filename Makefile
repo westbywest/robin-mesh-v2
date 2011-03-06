@@ -16,7 +16,7 @@
 # 02110-1301, USA
 #
 
-OWRT_DIST_SVN_PATH = openwrt/trunk
+OWRT_DIST_SVN_PATH = openwrt/branches/backfire
 
 OWRT_DIST_LOCAL_PATH = openwrt
 OWRT_DIST_SVN_REV = $(shell svn info openwrt/ | tail -3 | head -1 | awk '{print $$4}')
