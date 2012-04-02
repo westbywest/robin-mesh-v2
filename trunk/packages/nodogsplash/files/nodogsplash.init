@@ -170,7 +170,9 @@ test_module() {
     do_module_tests "ipt_mark"
     # if not using traffic control,
     # you can comment out the following 3 lines:
-    do_module_tests "imq" "numdevs=2"
-    do_module_tests "ipt_IMQ"
+# kmod-ipt-imq removed from openwrt kernel
+# https://dev.openwrt.org/changeset/25641/trunk/include/netfilter.mk
+#    do_module_tests "imq" "numdevs=2"
+#    do_module_tests "ipt_IMQ"
     do_module_tests "sch_htb"
 }

@@ -7,7 +7,7 @@ STATION_IP=
 NEIG=""
 RSSI=""
 
-iw dev $(uci -P /var/state get wireless.mesh.ifname) station dump > /tmp/station_dump
+iw dev $(uci -P /var/state get mesh.iface.ifname) station dump > /tmp/station_dump
 
 while read record ; do
 	case $(echo $record |awk '{print $1}') in

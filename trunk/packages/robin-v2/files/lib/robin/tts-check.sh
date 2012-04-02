@@ -20,7 +20,7 @@ COPYRIGHT
 
 # /lib/robin/tts-check.sh
 
-mesh_ifname=$(uci -P /var/state get wireless.mesh.ifname)
+mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
 cur_channel=$(uci get radio.channel.current)
 alt_channel=$(uci get radio.channel.alternate)
 	
@@ -43,7 +43,7 @@ switch_channel () {
 }
 
 #check channel drift
-[ "$cur_channel" -eq "$(iwgetid ${mesh_ifname} -rc)" ] || {
+[ "$cur_channel" -eq "$(uci get wireless.radio0.channel)" ] || {
 	REASON=10
 	/sbin/do_reboot $REASON
 }

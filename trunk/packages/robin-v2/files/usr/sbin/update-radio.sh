@@ -24,7 +24,7 @@ CALLER=$1
 CALLER="${CALLER:-1}"
 WDIR=/etc/update
 CONF=radio
-mesh_ifname=$(uci -P /var/state get wireless.mesh.ifname)
+mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
 
 echo "processing UCI file: $CONF"
 if [ "$CALLER" -eq 1 ] ; then

@@ -21,7 +21,7 @@ COPYRIGHT
 START=80
 
 get_ifaces () {
-	mesh_ifname=$(uci -P /var/state get wireless.mesh.ifname)
+	mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
 	[ "$(uci get mesh.Myap.up)" -eq 1 ] && AP2_iface=$(uci -P /var/state get wireless.private.ifname)
 	MeshBackbone_iface=$mesh_ifname  
 

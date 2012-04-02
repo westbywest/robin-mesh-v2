@@ -80,7 +80,7 @@ start () {
 	Myap_up=$(uci get mesh.Myap.up)
 	ETH_PORTS=$(uci get node.general.ethPorts)
 
-	mesh_ifname=$(uci -P /var/state get wireless.mesh.ifname)
+	mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
 
 	case $cp_HANDLER in
 		4|5|6) AP1_IFACE=tun0 ;;

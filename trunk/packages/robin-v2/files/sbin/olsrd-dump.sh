@@ -25,7 +25,7 @@ COPYRIGHT
 
 FILE_DEST=$1
 which tcpdump > /dev/null || { echo "you must first install tcpdump and libpcap"; exit 1; }
-mesh_ifname=$(uci -P /var/state get wireless.mesh.ifname)
+mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
 
 OPTIONS="-s 0 -ni ${mesh_ifname} -v port 698"
 [ -n "$FILE_DEST" ] && OPTIONS="${OPTIONS} -w /tmp/$FILE_DEST"

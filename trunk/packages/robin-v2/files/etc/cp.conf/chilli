@@ -22,7 +22,7 @@ COPYRIGHT
 
 ME="${0##*/}"
 chilliConfig="/etc/chilli/config"
-mesh_ifname=$(uci -P /var/state get wireless.mesh.ifname)
+mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
 
 . /etc/functions.sh
 

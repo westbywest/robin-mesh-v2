@@ -16,7 +16,8 @@
 # 02110-1301, USA
 #
 
-OWRT_DIST_SVN_PATH = openwrt/branches/backfire
+OWRT_DIST_SVN_PATH = openwrt/trunk
+OWRT_DIST_REV = 29709
 
 OWRT_DIST_LOCAL_PATH = openwrt
 OWRT_DIST_SVN_REV = $(shell svn info openwrt/ | tail -3 | head -1 | awk '{print $$4}')
@@ -39,14 +40,16 @@ endif
 all: owrt_checkout owrt_patches robin_checkout build_fw
 
 owrt_checkout:
-	svn co svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
+	svn co -r $(OWRT_DIST_REV) svn://svn.openwrt.org/$(OWRT_DIST_SVN_PATH) $(OWRT_DIST_LOCAL_PATH)
 	touch $@
 
 owrt_patches:
 	cp $(PATCHES_PATH)/network $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/base-files/etc/defconfig/bullet-m
 	cp $(PATCHES_PATH)/network $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/base-files/etc/defconfig/generic
 	cp $(PATCHES_PATH)/diag.sh $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/base-files/etc
-	cp $(PATCHES_PATH)/990-add_poe_passthrough.patch $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/patches-2.6.32
+	cp $(PATCHES_PATH)/990-add_poe_passthrough.patch $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/patches-2.6.39
+	#copy passwd so default root pwd = r0b1nm35h
+	cp $(PATCHES_PATH)/passwd $(OWRT_DIST_LOCAL_PATH)/packages/base-files/files/etc
 	touch $@
 #
 robin_checkout:
@@ -67,7 +70,7 @@ standard_config: apply_patches
 
 
 build_fw: standard_config
-	cd $(OWRT_DIST_LOCAL_PATH) && make package/robin-v2-clean
+	cd $(OWRT_DIST_LOCAL_PATH) && make package/robin-v2
 	cd $(OWRT_DIST_LOCAL_PATH) && make
 
 clean:

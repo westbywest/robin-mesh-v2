@@ -1,30 +1,31 @@
 #!/bin/sh 
 
-IFACE=$(uci -P /var/state get wireless.mesh.ifname)
+IFACE=$(uci -P /var/state get mesh.iface.ifname)
 channel=$(uci get radio.channel.current)
 ADDR=$(uci get network.mesh.ipaddr)
 ATTEMPTS="1 2"
 
-get_freq() {
-	local chan="$1"
-	iw phy0 info | grep -E -m1 "(\* ${chan:-....} MHz${chan:+|\\[$chan\\]})" | grep MHz | awk '{print $2}'
-}
-
-FREQ=$(get_freq "$channel")
-
-for attempt in $ATTEMPTS; do
-	(
-		iw dev "$IFACE" ibss leave
-		ip link set "$IFACE" down
-		ip addr flush dev "$IFACE"
-		iw dev "$IFACE" set type ibss
-		ip addr add "$ADDR"/24 dev "$IFACE"
-		ip link set "$IFACE" up
-		iw dev "$IFACE" ibss join RobinMeshNetwork "$FREQ" fixed-freq 02:ca:ff:ee:ba:be
-	) >/dev/null 2>/dev/null 
-done
-
 wlan_MAC=$(ifconfig "$IFACE" | grep HWaddr | awk '{print $5}')
 uci set node.general.wlanMAC=$wlan_MAC
 uci commit node
+
+#get_freq() {
+#	local chan="$1"
+#	iw phy0 info | grep -E -m1 "(\* ${chan:-....} MHz${chan:+|\\[$chan\\]})" | grep MHz | awk '{print $2}'
+#}
+
+#FREQ=$(get_freq "$channel")
+
+#for attempt in $ATTEMPTS; do
+#	(
+#		iw dev "$IFACE" ibss leave
+#		ip link set "$IFACE" down
+#		ip addr flush dev "$IFACE"
+#		iw dev "$IFACE" set type ibss
+#		ip addr add "$ADDR"/24 dev "$IFACE"
+#		ip link set "$IFACE" up
+#		iw dev "$IFACE" ibss join RobinMeshNetwork "$FREQ" fixed-freq 02:ca:ff:ee:ba:be
+#	) >/dev/null 2>/dev/null 
+#done
+
 #

@@ -32,7 +32,7 @@ write_log() {
 
 router_name=$(cat /proc/sys/kernel/hostname)
 wanip="$(uci get network.lan.ipaddr)"
-mesh_ifname=$(uci -P /var/state get wireless.mesh.ifname)
+mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
 
 case $(uci get node.general.ethPorts) in
 	2) wanssid=$(uci get wireless.@wifi-iface[1].ssid) ;;

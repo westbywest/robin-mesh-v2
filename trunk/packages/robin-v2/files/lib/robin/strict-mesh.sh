@@ -22,7 +22,7 @@ COPYRIGHT
 # allowing mesh only amomg nodes which belong to the same network name
 
 k_strict_mode=$(uci get management.enable.strict_mesh)
-MESH_IFACE=$(uci -P /var/state get wireless.mesh.ifname)
+MESH_IFACE=$(uci -P /var/state get mesh.iface.ifname)
 
 if [ -e /tmp/clean_mesh_rules ] ; then
 	sh /tmp/clean_mesh_rules

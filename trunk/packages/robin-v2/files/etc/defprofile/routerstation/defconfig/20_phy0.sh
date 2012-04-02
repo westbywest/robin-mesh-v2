@@ -43,7 +43,7 @@ config wifi-device  radio0
 	option hwmode	11${mode_11n}${mode_band}
 $ht_capab
 
-config wifi-iface mesh
+config wifi-iface
 	option device   radio0
 	option network  mesh
 	option mode     adhoc
