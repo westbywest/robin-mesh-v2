@@ -16,8 +16,11 @@
 # 02110-1301, USA
 #
 
-OWRT_DIST_SVN_PATH = openwrt/trunk
-OWRT_DIST_REV = 29709
+#OWRT_DIST_SVN_PATH = openwrt/trunk
+OWRT_DIST_SVN_PATH = openwrt/branches/attitude_adjustment
+#OWRT_DIST_REV = 29709
+#OWRT_DIST_REV = 31639
+OWRT_DIST_REV = 35267
 
 OWRT_DIST_LOCAL_PATH = openwrt
 OWRT_DIST_SVN_REV = $(shell svn info openwrt/ | tail -3 | head -1 | awk '{print $$4}')
@@ -25,8 +28,9 @@ OWRT_DIST_SVN_REV = $(shell svn info openwrt/ | tail -3 | head -1 | awk '{print 
 PACKAGES = packages
 PACKAGES_LOCAL_PATH = packages-build
 
-PKG_LIST = coova-chilli fping iputils libmatrixssl-nothread nodogsplash olsrd uclibc++ wget-matrix
-ROBIN_PKG = robin-v2
+#All packages worth using already included in OpenWRT AA
+#PKG_LIST = coova-chilli fping iputils libmatrixssl-nothread nodogsplash olsrd uclibc++ wget-matrix
+ROBIN_PKG = robin-v2 robin-v2-checkin
 
 ROBIN_BUILD = $(shell svn info | tail -3 | head -1 | awk '{print $$4}')
 		
@@ -44,19 +48,35 @@ owrt_checkout:
 	touch $@
 
 owrt_patches:
-	cp $(PATCHES_PATH)/network $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/base-files/etc/defconfig/bullet-m
-	cp $(PATCHES_PATH)/network $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/base-files/etc/defconfig/generic
-	cp $(PATCHES_PATH)/diag.sh $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/base-files/etc
-	cp $(PATCHES_PATH)/990-add_poe_passthrough.patch $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/patches-2.6.39
+	#cp -v $(PATCHES_PATH)/network $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/base-files/etc/defconfig/bullet-m
+	#cp -v $(PATCHES_PATH)/network $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/base-files/etc/defconfig/generic
+	#cp -v $(PATCHES_PATH)/diag.sh $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/base-files/etc
+	#cp -v $(PATCHES_PATH)/990-add_poe_passthrough.patch $(OWRT_DIST_LOCAL_PATH)/target/linux/ar71xx/patches-2.6.39
+	cp -v $(PATCHES_PATH)/890_ath9k_advertize_beacon_int_infra_match.patch $(OWRT_DIST_LOCAL_PATH)/package/mac80211/patches/
+	cp -v $(PATCHES_PATH)/891_ath9k_htc_advertize_allowed_vif_combinations.patch $(OWRT_DIST_LOCAL_PATH)/package/mac80211/patches/
+	cp -v $(PATCHES_PATH)/892_ath9k_htc_remove_interface_combination_specific_checks.patch $(OWRT_DIST_LOCAL_PATH)/package/mac80211/patches/
+	cp -v $(PATCHES_PATH)/060-tcp-ecn-dont-delay-ACKS-after-CE.patch $(OWRT_DIST_LOCAL_PATH)/target/linux/generic/patches-3.3
+	cp -v $(PATCHES_PATH)/061-fq_codel-dont-reinit-flow-state.patch $(OWRT_DIST_LOCAL_PATH)/target/linux/generic/patches-3.3
+	cp -v $(PATCHES_PATH)/900-leds-gpio-asm-include.patch $(OWRT_DIST_LOCAL_PATH)/target/linux/atheros/patches-3.3
+
 	#copy passwd so default root pwd = r0b1nm35h
-	cp $(PATCHES_PATH)/passwd $(OWRT_DIST_LOCAL_PATH)/packages/base-files/files/etc
+	mkdir -p $(OWRT_DIST_LOCAL_PATH)/files/etc
+	cp -v $(PATCHES_PATH)/shadow $(OWRT_DIST_LOCAL_PATH)/files/etc
+	chmod 644 $(OWRT_DIST_LOCAL_PATH)/files/etc/shadow
 	touch $@
 #
 robin_checkout:
-	cp -fR $(PACKAGES)/ $(PACKAGES_LOCAL_PATH)
+#	cp -fR $(PACKAGES)/ $(PACKAGES_LOCAL_PATH)
 
-	cd $(OWRT_DIST_LOCAL_PATH)/package && $(foreach PACKAGE, $(PKG_LIST), ln -sf ../../$(PACKAGES_LOCAL_PATH)/$(PACKAGE) .;)
-	cd $(OWRT_DIST_LOCAL_PATH)/package && $(foreach PACKAGE, $(ROBIN_PKG), ln -sf ../../$(PACKAGES_LOCAL_PATH)/$(PACKAGE) .;)
+	if ! grep -q robin $(OWRT_DIST_LOCAL_PATH)/feeds.conf ; then
+		$(shell echo "adding robin package feed ...")
+		cd $(OWRT_DIST_LOCAL_PATH) && $(shell echo "src-link robin ../../packages" >> feeds.conf )
+	fi
+	cd $(OWRT_DIST_LOCAL_PATH) && $(shell ./scripts/feeds update -a )
+	cd $(OWRT_DIST_LOCAL_PATH) && $(shell ./scripts/feeds install -a )
+	cd $(OWRT_DIST_LOCAL_PATH) && $(shell ./scripts/feeds install robin )
+	cd $(OWRT_DIST_LOCAL_PATH) && $(shell ./scripts/feeds install robin-v2-checkout )
+
 	touch $@
 
 apply_patches: 
@@ -64,13 +84,16 @@ apply_patches:
 	touch $@
 
 standard_config: apply_patches
-	$(shell echo $(ROBIN_BUILD) > $(PACKAGES_LOCAL_PATH)/robin-v2/files/etc/robin_build)
-	$(shell echo $(OWRT_DIST_SVN_REV) > $(PACKAGES_LOCAL_PATH)/robin-v2/files/etc/openwrt_svn_rev)
-	$(shell sh update_version)
+#	$(shell echo $(ROBIN_BUILD) > $(PACKAGES_LOCAL_PATH)/robin-v2-checkin/files/etc/robin_build)
+#	$(shell echo $(OWRT_DIST_SVN_REV) > $(PACKAGES_LOCAL_PATH)/robin-v2-checkin/files/etc/openwrt_svn_rev)
+	$(shell echo $(ROBIN_BUILD) > $(PACKAGES)/robin-v2-checkin/files/etc/robin_build)
+	$(shell echo $(OWRT_DIST_SVN_REV) > $(PACKAGES)/robin-v2-checkin/files/etc/openwrt_svn_rev)
+# not sure what this command does
+#	$(shell sh update_version)
 
 
 build_fw: standard_config
-	cd $(OWRT_DIST_LOCAL_PATH) && make package/robin-v2
+	cd $(OWRT_DIST_LOCAL_PATH) && make package/robin-v2-checkin
 	cd $(OWRT_DIST_LOCAL_PATH) && make
 
 clean:
