@@ -5,7 +5,7 @@ Derivative of the ROBIN Mesh Firmware http://wiki-robin.meshroot.com/
 
 Based on ROBIN v2 from http://subversion.assembla.com/svn/robin_v2
 
-Modifications/updates by Benjamin West / WasabiNet <ben@gowasabi.net> http://gowasabi.net
+Modifications/updates to ramona branch by Benjamin West / WasabiNet <ben@gowasabi.net> http://gowasabi.net
 
 License
 =======
