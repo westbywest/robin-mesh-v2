@@ -1,0 +1,142 @@
+#!/bin/sh /etc/rc.common
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+START=80
+
+get_ifaces () {
+	mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
+	[ "$(uci get mesh.Myap.up)" -eq 1 ] && AP2_iface=$(uci -P /var/state get wireless.private.ifname)
+	MeshBackbone_iface=$mesh_ifname  
+
+	case $cp_HANDLER in
+		4|5|6) AP1_iface=tun0 ;;
+		*) AP1_iface=$(uci get cp_switch.main.iface) ;;
+	esac	
+
+	[ "$node_role" -eq 1 ] && WAN_PORT=$(uci get node.general.wanPort)
+}
+
+get_addresses() {
+	IP_mesh=$(ifconfig ${mesh_ifname} |grep 'inet' |cut -d: -f2 |awk '{print $1}')
+	
+	if [ "$node_role" -eq 1 ]; then
+		BLACKLIST="/etc/blacklist/subnets"
+
+		this_GATEWAY=$(ifconfig $WAN_PORT |grep 'inet' |cut -d: -f2 |awk '{print $1}')
+		lan_IP=$(ip route |grep $WAN_PORT |grep -v 'default' |awk '{print $1}')
+		inetRouter_IP=$(ip route |awk '/default via/ {print $3}')
+		inetRouter_IP="${inetRouter_IP}/32"
+
+		NET_ap1=$(ip route |awk '/dev wlan1/ {print $1}')
+	else
+		NET_ap1=$(ip route |awk '/dev br-lan/ {print $1}')
+
+	fi
+	[ "$(uci get mesh.Myap.up)" -eq 1 ] && NET_ap2=$(ip route |awk '/dev wlan2/ {print $1}')
+
+	if [ 1 -eq "$dashboard_onLan" ] ; then
+		dashboard_IP=$(uci get iprules.filter.dashboard_IP)
+		if [ "$(is_ip.sh $dashboard_IP)" -eq 0 ] ; then
+			dashboard_IP="${dashboard_IP}/32"
+		else
+			dashboard_onLan=0
+		fi
+	fi
+
+	if [ 1 -eq "$proxy_onLAN" ] ; then #check upstream proxy IP
+		proxy_IP=$(uci get general.services.via_proxy |awk -F : '{print $1}')
+		proxy_port=$(uci get general.services.via_proxy |awk -F : '{print $2}')
+		if [ "$(is_ip.sh $proxy_IP)" -eq 0 ] ; then
+			proxy_IP="${proxy_IP}/32"
+		else
+			proxy_onLAN=0
+		fi
+	fi
+
+	case $LAN_block in
+		0|1) source_addr= ;; 
+		101) source_addr="-s ${AP1_net}.0.0.0/8" ;; 
+		102) source_addr="-s ${AP2_net}.0.0.0/8" ;;
+	esac	
+
+	if [ 1 -eq "$pmde_server" -a "$pmde_onLan" -eq 1 ]; then
+		pmde_IP=$(uci get pomade.server.host)
+	fi
+}
+
+get_parameters () {
+	cp_HANDLER=$(uci get cp_switch.main.which_handler)
+	node_role=$(uci get node.general.role)	
+	ETH_PORTS=$(uci get node.general.ethPorts)
+
+	LAN_block=$(uci get iprules.filter.LAN_BLOCK)
+	AP1_isolation=$(uci get iprules.filter.AP1_isolation)
+	AP2_isolation=$(uci get iprules.filter.AP2_isolation)
+	LOG=$(uci get iprules.filter.enable_log)
+
+	pmde_client=$(uci get pomade.client.enabled)
+	pmde_onLan=$(uci get pomade.server.private_lan)
+	dashboard_onLan=$(uci get management.enable.dashboard_onLan)
+	proxy_onLAN=$(uci get management.enable.proxy)
+	proxy_onLAN="${proxy_onLAN:-0}"
+	USE_APs_HNA=$(uci get mesh.hna.announce)
+	AP1_net=$(uci get mesh.ap.net)
+	AP2_net=$(uci get mesh.Myap.net)
+}	
+
+ipt() {
+    opt=$1; shift
+    echo "iptables -D $*" >> /var/run/robin.iptables
+    iptables $opt $*
+}
+
+start() { 
+	. /lib/robin/plugins.sh
+
+	get_parameters
+	get_ifaces
+	get_addresses
+
+	[ -e "/var/run/robin.iptables" ] && sh /var/run/robin.iptables 2>/dev/null
+	rm -f /var/run/robin.iptables 2>/dev/null
+
+	source_plugins firewall
+}
+
+stop() { 
+	iptables -P INPUT ACCEPT
+	iptables -P OUTPUT ACCEPT
+	iptables -P FORWARD ACCEPT
+	iptables -F
+	iptables -X
+	iptables -t nat -P PREROUTING ACCEPT
+	iptables -t nat -P POSTROUTING ACCEPT
+	iptables -t nat -P OUTPUT ACCEPT
+	iptables -t nat -F
+	iptables -t nat -X
+}
+
+clean() { 
+	[ -e "/var/run/robin.iptables" ] && sh /var/run/robin.iptables 2>/dev/null
+	rm -f /var/run/robin.iptables 2>/dev/null
+}
+
+EXTRA_COMMANDS="clear"
+#

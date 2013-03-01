@@ -1,0 +1,62 @@
+#!/bin/sh /etc/rc.common
+# /init.d/captive-portal-preup
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# performs some operations that are related to the installed captive-portal
+# Do this before the captive-portals itself is started
+
+START=77
+
+rcc() {
+	#dynamic captive portal start-stop scripts
+	CP_STOP_SCRIPTS="78:${CP_INIT_SCRIPT} 80:iprules"
+	CP_RESTART_SCRIPTS="77:captive-portal-preup 78:${CP_INIT_SCRIPT} 80:iprules"
+
+	mkdir -p /var/run/rc.c
+
+	for entry in $CP_STOP_SCRIPTS ; do
+		SCRIPT_SQ=$(echo $entry | /usr/bin/awk -F: '{print $1}')
+		SCRIPT_ID=$(echo $entry | /usr/bin/awk -F: '{print $2}')
+
+ 		/bin/ln -sf /etc/init.d/${SCRIPT_ID} /var/run/rc.c/"K${SCRIPT_SQ}${SCRIPT_ID}"
+	done
+
+	for entry in $CP_RESTART_SCRIPTS ; do
+		SCRIPT_SQ=$(echo $entry | /usr/bin/awk -F: '{print $1}')
+		SCRIPT_ID=$(echo $entry | /usr/bin/awk -F: '{print $2}')
+
+ 		/bin/ln -sf /etc/init.d/${SCRIPT_ID} /var/run/rc.c/"S${SCRIPT_SQ}${SCRIPT_ID}"
+	done
+}
+	
+start () {	
+	CP_HANDLER=$(uci get cp_switch.main.which_handler)
+	CP_INIT_SCRIPT=$(uci get cp_switch."handler_${CP_HANDLER}".rc_script)
+	CP_CONF_SCRIPT=$(uci get cp_switch."handler_${CP_HANDLER}".config_script)
+	
+	/etc/init.d/iprules stop
+	
+	#dynamic captive portal start-stop scripts
+	[ -d /var/run/rc.c ] || rcc
+
+	echo "starting preUp script: ${CP_CONF_SCRIPT}"
+	/etc/cp.conf/${CP_CONF_SCRIPT}
+}
+#

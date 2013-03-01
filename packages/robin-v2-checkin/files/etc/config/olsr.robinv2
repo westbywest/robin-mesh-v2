@@ -1,0 +1,33 @@
+# /etc/config/olsr
+#
+# optimization in flooding (but sometimes risk packetloss):
+# 	TcInterval > HelloInterval
+#	MprCoverage 3
+#
+# flood like crazy (and thus use a lot of bandwidth):
+# 	TcInterval < HelloInterval
+#	MprCoverage 7
+
+config "olsr" "general"
+	option Pollrate '0.05'
+	option UciConfig '0'
+	option MprCoverage '3'
+
+config "olsr" "interface"
+	option HelloInterval '2.0'
+	option HelloValidityTime '40.0'
+	option TcInterval '5.0'	
+	option TcValidityTime '100.0'
+	option MidInterval '18.0'
+	option MidValidityTime '324.0'
+	option HnaInterval '18.0'
+	option HnaValidityTime '108.0'
+
+config "olsr" "plugin"
+	option 'load_mdns' '0'
+
+config "olsr" "smart_gateway"
+	option 'SmartGateway' no
+	option 'uplink' 256 
+	option 'downlink' 1024
+#

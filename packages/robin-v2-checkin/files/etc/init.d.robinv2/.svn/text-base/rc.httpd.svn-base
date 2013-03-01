@@ -1,0 +1,70 @@
+#!/bin/sh
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# /init.d/rc.httpd
+
+HTTPD_BIN="/usr/sbin/httpd"
+
+httpd_config() {
+	httpd_auth=$(uci get management.enable.httpd_auth)
+	httpd_auth=${httpd_auth:-0}
+	key=$(uci get management.enable.httpd_passwd)
+	[ -n "$key" ] || key=$(uci get management.enable.rootpwd)
+
+	echo "# httpd.conf" > /tmp/httpd.conf
+	echo "A:*" >> /tmp/httpd.conf
+	case $httpd_auth in
+		0) echo "/cgi-bin:admin:admin"  >> /tmp/httpd.conf ;;
+		1) echo "/cgi-bin:admin:${key}" >> /tmp/httpd.conf ;;
+		2) 
+			MD5_crypt_password=$(httpd -m $key)
+			echo "/cgi-bin:admin:${MD5_crypt_password}" >> /tmp/httpd.conf
+			;;
+	esac	
+
+	echo >> /tmp/httpd.conf
+	cp -f /tmp/httpd.conf /etc
+}
+
+case $1 in
+	start)
+		[ -x "$HTTPD_BIN" ] || return 1
+
+		httpd_config
+		/usr/sbin/httpd -p 8080 -h /www -c /etc/httpd.conf -r "robin-mesh"
+		logger -st ${0##*/} "started"
+		;;
+
+	stop) 
+		killall httpd 
+		logger -st ${0##*/} "stopped"
+		;;
+
+	restart)
+		killall httpd 
+		logger -st ${0##*/} "stopped"
+		sleep 3
+		[ -x "$HTTPD_BIN" ] || return 1
+		httpd_config
+		/usr/sbin/httpd -p 8080 -h /www -c /etc/httpd.conf -r "robin-mesh"
+		logger -st ${0##*/} "started"
+		;;
+esac
+#

@@ -1,0 +1,12 @@
+#!/bin/sh /etc/rc.common
+# Copyright (C) 2006 OpenWrt.org 
+# edited for Robin Mesh by Antonio Anselmi
+
+START=99
+start() {
+	[ -f /etc/sysctl.conf ] && sysctl -p >&-
+
+	# trigger a reboot on any oops events
+	# a poor man's software watchdog, crude but very effective
+	sysctl -w kernel.panic_on_oops=1
+}

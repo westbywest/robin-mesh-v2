@@ -1,0 +1,21 @@
+# auto generated from the dashboard
+
+config chilli agent
+	option service 		
+	option radiusserver1 	
+	option radiusserver2 		
+	option radiussecret			
+	option radiusnasid 				
+	option uamserver 			
+	option uamurl 					
+	option uamport 		'3990'			
+	option uamurlextras 			
+	option uamsecret 				
+	option uamdomain 				
+	option custom1 					
+	option custom2 				
+	option custom3 
+	option admusr                         
+     option admpwd  	
+#
+

@@ -1,0 +1,58 @@
+#!/bin/sh 
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# /sbin/node_restart
+
+stop_node() {
+	[ "$(ps |grep crond |grep -v grep |wc -l)" -gt 0 ] && /etc/init.d/timing stop 
+	for i in /var/run/rc.c/K*; do
+		$i stop 
+	done 
+	(
+		[ "$(ps aux |grep dnsmasq |grep -v grep |wc -l)" -gt 0 ] && killall dnsmasq
+		[ "$(ps aux |grep tinyproxy |grep -v grep |wc -l)" -gt 0 ] && /etc/init.d/tinyproxy stop
+		[ "$(ps aux |grep httpd |grep -v grep |wc -l)" -gt 0 ] && /etc/init.d/rc.httpd stop
+		[ "$(ps aux |grep hostapd |grep -v grep |wc -l)" -gt 0 ] && killall -9 hostapd
+	)  >/dev/null 2>&1 
+
+	/etc/init.d/olsrd stop 
+
+	#for some reason network interfaces are not all down after "/etc/init.d/network stop"
+	#so we have to explicitly take all 'em down 
+	ifs=$(cat /proc/net/dev 2>/dev/null | awk 'BEGIN {FS = ":"}; $0 ~ /:/ { print $1 }')
+	/etc/init.d/network stop >/dev/null 2>&1 
+	for i in $ifs ; do
+		ifconfig $i down 2>/dev/null
+	done
+}
+
+#main
+cp_HANDLER=$(uci get cp_switch.main.which_handler)
+node_role=$(uci get node.general.role)	
+
+stop_node
+
+/etc/init.d/network start
+echo "restarting services"
+for i in /etc/rc.r/S*; do
+	$i start 2>&1
+done 
+#
+

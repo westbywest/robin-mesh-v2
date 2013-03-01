@@ -1,0 +1,87 @@
+#!/bin/sh 
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# /etc/cp.conf/chilli  coovachilli pre-configurator
+
+ME="${0##*/}"
+chilliConfig="/etc/chilli/config"
+mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
+
+. /etc/functions.sh
+
+# Set DHCP MAC address for UAMURL
+mac="$(/sbin/ifconfig ${mesh_ifname} | grep HWaddr | cut -c42-55 |sed "s/:/-/g")"
+# old kernels (2.6.21):
+# mac="$(/sbin/ifconfig wifi0 | grep HWaddr | cut -c42-55 |sed "s/:/-/g")"
+	
+# service level settings
+service=$(uci get chilli.agent.service)
+[ -e /etc/cp.conf/service.$service ] && . /etc/cp.conf/service.$service
+
+captive_iface=$(uci get cp_switch.main.iface)
+captive_iface_ip=$(uci get cp_switch.main.iface_ip)
+captive_iface_net=$(uci get cp_switch.main.iface_net)		
+captive_iface_mask=$(uci get cp_switch.main.iface_mask)	
+case $(uci get node.general.ethPorts) in
+	2) ssid=$(uci get wireless.@wifi-iface[1].ssid) ;;
+	1) ssid=$(uci get wireless.public.ssid) ;;
+esac
+
+# save WISPr-Session-Terminate-Time attribute
+TimeZone="GMT+0"
+echo "$TimeZone" > /etc/TZ
+uci set system.@system[0].timezone=$TimeZone
+uci commit system
+
+# local defaults; 'UAM Url' settings, overridable with UCI configs too
+cat > $chilliConfig << END_OF_FILE
+HS_UAMHOMEPAGE="http://\\\$HS_UAMLISTEN:\\\$HS_UAMPORT/www/coova.html"
+HS_LOC_NAME="$ssid"
+END_OF_FILE
+
+# configuration
+option_cb() { [ -n "$2" ] && echo "HS_$(echo $1|tr 'a-z' 'A-Z')=\"$2\"" | sed 's/\$/\\\$/g'; }
+config_load chilli >> $chilliConfig
+
+# override always
+cat >>  $chilliConfig << END_OF_FILE
+HS_MODE=hotspot
+HS_TYPE=chillispot
+HS_LANIF=$captive_iface
+HS_NETWORK=$captive_iface_net
+HS_NETMASK=$captive_iface_mask
+HS_SSID="$ssid"
+HS_NASMAC=00-$mac
+HS_DNS1=$captive_iface_ip
+HS_UAMLISTEN=$captive_iface_ip
+HS_NASID="\${HS_RADIUSNASID:-\$(uci get system.@system[0].hostname)}"
+HS_RADIUS="\$HS_RADIUSSERVER1"
+HS_RADIUS2="\$HS_RADIUSSERVER2"
+HS_RADSECRET="\$HS_RADIUSSECRET"
+HS_ANYIP="\${HS_ANYIP:-off}"
+HS_MACAUTH="\${HS_MACAUTH:-on}"
+HS_UAMDOMAINS="\$HS_UAMDOMAIN \$HS_UAMDOMAINS"
+HS_UAMSERVER_URL=\$(echo \$HS_UAMSERVER|awk -F'://' '{print (NF == 1) ? "http://" \$1 : \$1 "://" \$2;}')
+HS_UAMSERVER=\$(echo \$HS_UAMSERVER|awk -F'://' '{print (NF == 1) ? \$1 : \$2;}')
+HS_UAMFORMAT="\\\$HS_UAMSERVER_URL\\\$HS_UAMURL\\\$HS_UAMURLEXTRAS"
+END_OF_FILE
+
+LOCAL_DOMAIN=$(uci get management.enable.local_domain)
+[ -n "$LOCAL_DOMAIN" ] && echo "HS_DNS_DOMAIN=$LOCAL_DOMAIN" >> $chilliConfig

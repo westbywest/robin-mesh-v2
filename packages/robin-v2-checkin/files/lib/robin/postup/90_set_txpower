@@ -1,0 +1,31 @@
+#!/bin/sh
+
+# TXPower settings only work if device is up already
+# while atheros hardware theoretically is capable of per-vif (even per-packet) txpower
+# adjustment it does not work with the current atheros hal/madwifi driver
+
+VIRTUAL_IFACES=/var/run/vifs
+iwconfig > $VIRTUAL_IFACES
+
+an_VIRTUAL_IFACES=$(cat $VIRTUAL_IFACES |grep '11an' |grep '^wlan' |awk '{print $1}' |xargs)
+gn_VIRTUAL_IFACES=$(cat $VIRTUAL_IFACES |grep '11gn' |grep '^wlan' |awk '{print $1}' |xargs)
+
+
+an_TXPOWER=$(uci get txpower.an.dbm)
+gn_TXPOWER=$(uci get txpower.gn.dbm)
+
+
+[ -n "$gn_TXPOWER" -a -n "$gn_VIRTUAL_IFACES" ] && {
+	for vif in $gn_VIRTUAL_IFACES;	do
+		iwconfig $vif txpower "${gn_TXPOWER}"
+	done
+	logger -st ${0##*/} "set 802.11gn txpower to $gn_TXPOWER dbm"
+}
+
+[ -n "$an_TXPOWER" -a -n "$an_VIRTUAL_IFACES" ] && {
+	for vif in $an_VIRTUAL_IFACES; do
+		iwconfig $vif txpower "${an_TXPOWER}"
+	done
+	logger -st ${0##*/} "set 802.11an txpower to $an_TXPOWER dbm"
+}
+#

@@ -1,0 +1,62 @@
+#!/bin/sh
+#forwarder
+
+
+port_forward() {
+	WAN=$(uci get node.general.wanPort)
+	IPTABLES=$(which iptables)
+
+	IPTABLES="${IPTABLES} -I PREROUTING -t nat -i ${WAN}"
+
+	### TCP
+	sp1=$(uci get forwarder.rule_1.IncomingPort)
+	[ -n "$sp1" ] && {
+		dst1=$(uci get forwarder.rule_1.IPAddr)
+		dp1=$(uci get forwarder.rule_1.DstPort)
+		$IPTABLES -p TCP --dport "$sp1" -j DNAT --to "${dst1}:${dp1}"
+	}
+
+	sp2=$(uci get forwarder.rule_2.IncomingPort)
+	[ -n "$sp2" ] && {
+		dst2=$(uci get forwarder.rule_2.IPAddr)
+		dp2=$(uci get forwarder.rule_2.DstPort)
+		$IPTABLES -p TCP --dport "$sp2" -j DNAT --to "${dst2}:${dp2}"
+	}
+
+	sp3=$(uci get forwarder.rule_3.IncomingPort)
+	[ -n "$sp3" ] && {
+		dp3=$(uci get forwarder.rule_3.DstPort)
+		dst3=$(uci get forwarder.rule_3.IPAddr)
+		$IPTABLES -p TCP --dport "$sp3" -j DNAT --to "${dst3}:${dp3}"
+	}
+
+	### UDP
+	sp4=$(uci get forwarder.rule_4.IncomingPort)
+	[ -n "$sp4" ] && {
+		dp4=$(uci get forwarder.rule_4.DstPort)
+		dst4=$(uci get forwarder.rule_4.IPAddr)
+		$IPTABLES -p UDP --dport "$sp4" -j DNAT --to "${dst4}:${dp4}"
+	}
+
+	sp5=$(uci get forwarder.rule_5.IncomingPort)
+	[ -n "$sp5" ] && {
+		dst5=$(uci get forwarder.rule_5.IPAddr)
+		dp5=$(uci get forwarder.rule_5.DstPort)
+		$IPTABLES -p UDP --dport "$sp5" -j DNAT --to "${dst5}:${dp5}"
+	}
+
+	sp6=$(uci get forwarder.rule_6.IncomingPort)
+	[ -n "$sp6" ] && {
+		dst6=$(uci get forwarder.rule_6.IPAddr)
+		dp6=$(uci get forwarder.rule_6.DstPort)
+		$IPTABLES -p UDP --dport "$sp6" -j DNAT --to "${dst6}:${dp6}"
+	}
+}
+
+
+if [ 1 -eq "$(uci get forwarder.general.enabled)" -a \
+	  1 -eq "$(uci get node.general.role)" ]; then
+	echo "applying forwarding rules..."
+	port_forward
+fi
+# 

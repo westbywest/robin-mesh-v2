@@ -1,0 +1,10 @@
+#!/bin/sh
+##DNS queries redirection
+
+if [ 1 -eq "$node_role" -a "$(uci get management.enable.public_dns)" -eq 0 ]; then
+	dhcpd_dns_ip=$(cat /tmp/resolv.conf.dhcp |awk '{print $2}')
+
+	ipt -A PREROUTING -t nat -p udp --dport 53 -j DNAT --to $dhcpd_dns_ip
+	ipt -A PREROUTING -t nat -p tcp --dport 53 -j DNAT --to $dhcpd_dns_ip
+fi
+#

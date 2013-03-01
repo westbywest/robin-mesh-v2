@@ -1,0 +1,17 @@
+#!/bin/sh
+#drop 101/8 IP leases
+
+wanPort=$(uci get node.general.wanPort)
+ETH_PORTS=$(uci get node.general.ethPorts)
+
+echo "avoid 101/8 IP leases"
+case $ETH_PORTS in
+	1) 
+		ipt -I INPUT -i $wanPort -p udp --destination-port 67:68 --source-port 67:68 -s 101.0.0.0/8 -j DROP
+		;;
+	2) 
+		lanPort=$(uci get node.general.lanPort)	
+		ipt -I INPUT -i $lanPort -p udp --destination-port 67:68 --source-port 67:68 -s 101.0.0.0/8 -j DROP
+		ipt -I INPUT -i $wanPort -p udp --destination-port 67:68 --source-port 67:68 -s 101.0.0.0/8 -j DROP
+		;;
+esac

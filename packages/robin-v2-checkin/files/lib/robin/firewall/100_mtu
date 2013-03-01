@@ -1,0 +1,16 @@
+#!/bin/sh
+#MTU
+
+MTU_CLAMP=$(uci get iprules.filter.MTU_CLAMP)
+
+case $MTU_CLAMP in
+	9) echo "skip MTU setting, leave as is" ;;
+	0) 
+		echo "set MTU to auto" 
+		ipt -I FORWARD -t mangle -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --clamp-mss-to-pmtu
+		;;
+	*) 
+		echo "set MTU to $MTU_CLAMP"
+		ipt -I FORWARD -t mangle -p tcp -m tcp --tcp-flags SYN,RST SYN -j TCPMSS --set-mss $MTU_CLAMP
+		;;
+esac

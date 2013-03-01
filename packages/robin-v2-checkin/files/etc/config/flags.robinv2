@@ -1,0 +1,18 @@
+config flags status
+	option iwag    '0'
+	option lease   '0'
+	option RR      '1'
+	option flag_3  '0'
+	option flag_4  '0'
+	option flag_5  '0'
+	option flag_6  '0'
+	option flag_7  '0'
+	option flag_8  '0'
+	option flag_9  '0'
+	
+config flags restart
+	option cps     '0'
+	option node    '0'
+	option system  '0'
+#
+

@@ -1,0 +1,101 @@
+#!/bin/sh
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# /sbin/wificpaheartbeat
+# This is a heatbeat script required for WiFi-CPA for both Hosted & Enterprise users
+# This script needs to be added as a cron every 2 min
+
+write_log() {
+	case $1 in
+		0) log_message="presence signaled successfully" ;;
+		1) log_message="could not send heartbeat signal" ;;
+	esac
+	logger -st ${0##*/} $log_message
+}
+
+router_name=$(cat /proc/sys/kernel/hostname)
+wanip="$(uci get network.lan.ipaddr)"
+mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
+
+case $(uci get node.general.ethPorts) in
+	2) wanssid=$(uci get wireless.@wifi-iface[1].ssid) ;;
+	1) wanssid=$(uci get wireless.public.ssid) ;;
+esac
+
+wanssid=$(echo $wanssid|sed "s/ //g") 
+nasid="$(uci get chilli.agent.radiusnasid)"
+uamserver="$(uci get chilli.agent.uamserver)"
+
+mac="$(/sbin/ifconfig ${mesh_ifname} | grep HWaddr | cut -c42-55 |sed "s/:/-/g")"
+# old kernels (2.6.21):
+# mac="$(/sbin/ifconfig wifi0 | grep HWaddr | cut -c42-55 |sed "s/:/-/g")"
+
+lanmac="$(uci get node.general.myMAC| cut -c3-55 |sed "s/:/-/g")"
+wanmac="$(uci get node.general.myMAC| cut -c3-55 |sed "s/:/-/g")"
+robin_ver=$(cat /etc/robin_version)
+
+WDIR=/tmp
+LOG=/tmp/wificpa_update.log 
+rx_file=$WDIR/wificpa_received 
+wget_options="-t 1 -T 60"
+
+rm -f $rx_file
+
+#Complete heartbeat dependant on WiFi-CPA Serivce type
+case $(uci get chilli.agent.service) in
+ 
+	'wificpa_hosted')
+		case $(uci get node.general.role) in
+			1)
+				node_type="gateway"
+				wget $wget_options  "http://controlpanel.wifi-cpa.com/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Gateway&ver=$robin_ver&node_type=$node_type" -o $LOG -O $rx_file
+				EXIT_CODE=$?
+				write_log $EXIT_CODE
+			;;
+ 		
+			0)
+				node_type="client"
+				wget $wget_options  "http://controlpanel.wifi-cpa.com/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Repeater&ver=$robin_ver&node_type=$node_type" -o $LOG -O $rx_file
+				EXIT_CODE=$?	
+				write_log $EXIT_CODE		
+			;;
+		esac
+	;;
+ 
+	'wificpa_enterprise') 
+		case $(uci get node.general.role) in
+			1)
+				node_type="gateway"
+				wget $wget_options  "http://"$uamserver"/WiFi-CPA/ControlPanel/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Gateway&ver=$robin_ver&node_type=$node_type" -o $LOG -O $rx_file
+				EXIT_CODE=$?
+				write_log $EXIT_CODE
+                ;;
+ 
+			0)
+				node_type="client"
+				wget $wget_options  "http://"$uamserver"/WiFi-CPA/ControlPanel/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Repeater&ver=$robin_ver&node_type=$node_type" -o $LOG -O $rx_file
+				EXIT_CODE=$?
+				write_log $EXIT_CODE
+			;;
+		esac
+	;;
+ 
+esac
+#

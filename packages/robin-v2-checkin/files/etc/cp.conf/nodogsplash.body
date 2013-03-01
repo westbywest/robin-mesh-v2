@@ -1,0 +1,5 @@
+GatewayName robin
+ClientIdleTimeout 40
+ClientForceTimeout 40
+AuthenticateImmediately 1
+TrafficControl 0

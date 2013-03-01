@@ -1,0 +1,7 @@
+# READONLY CONFIGCHANGE
+#0-59/2 * * * * /lib/robin/tts-check.sh
+#0-59/5 * * * * ( /sbin/preupdate ; /sbin/watchout4node && /sbin/update )
+#22 * * * * /sbin/upgrade
+#0-59/20 * * * * /lib/robin/iwag-test.sh
+#0-59/3 * * * * /sbin/hw-heartbeat.sh
+

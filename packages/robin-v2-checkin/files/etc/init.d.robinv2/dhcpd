@@ -1,0 +1,137 @@
+#!/bin/sh /etc/rc.common
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# /init.d/dhcpd
+
+START=76
+
+dnsmasq_header() {
+	echo "bogus-priv" > $DNSMASQ_CONF
+
+	#avoid NXDOMAIN DNS hijacking
+	echo "bogus-nxdomain=67.215.65.132" >> $DNSMASQ_CONF
+	echo "bogus-nxdomain=67.215.77.132" >> $DNSMASQ_CONF
+	echo "bogus-nxdomain=208.67.216.130" >> $DNSMASQ_CONF
+
+	echo "filterwin2k" >> $DNSMASQ_CONF
+	echo "dhcp-leasefile=/tmp/dhcp.leases" >> $DNSMASQ_CONF
+	echo "dhcp-authoritative" >> $DNSMASQ_CONF
+
+	LOCAL_DOMAIN=$(uci get management.enable.local_domain)
+	[ "$LOCAL_DOMAIN" == "-" ] || echo "domain=$LOCAL_DOMAIN" >> $DNSMASQ_CONF
+}
+
+dnsmasq_body() {	
+	case $1 in
+		2) #public AP + private AP
+			ap1_ipaddr=$(uci get node.general.IP_ap |awk -F / '{print $1}')
+			ap2_ipaddr=$(uci get node.general.IP_Myap |awk -F / '{print $1}')
+			RANGE_PUBLIC=$(cat /tmp/public_pool)
+			RANGE_PRIVATE=$(cat /tmp/private_pool)
+
+			echo "dhcp-range=public,$RANGE_PUBLIC" >> $DNSMASQ_CONF
+			echo "dhcp-option=public,3,$ap1_ipaddr" >> $DNSMASQ_CONF
+			echo "dhcp-option=public,6,$ap1_ipaddr" >> $DNSMASQ_CONF
+			echo "dhcp-range=private,$RANGE_PRIVATE" >> $DNSMASQ_CONF
+			echo "dhcp-option=private,3,$ap2_ipaddr" >> $DNSMASQ_CONF
+			echo "dhcp-option=private,6,$ap2_ipaddr" >> $DNSMASQ_CONF
+			;;
+
+		1) #public AP only
+			ap1_ipaddr=$(uci get node.general.IP_ap |awk -F / '{print $1}')
+			RANGE_PUBLIC=$(cat /tmp/public_pool)
+
+			echo "dhcp-range=$RANGE_PUBLIC" >> $DNSMASQ_CONF
+			echo "dhcp-option=3,$ap1_ipaddr" >> $DNSMASQ_CONF
+			echo "dhcp-option=6,$ap1_ipaddr" >> $DNSMASQ_CONF
+			;;
+
+		0) #private AP only 
+			ap2_ipaddr=$(uci get node.general.IP_Myap |awk -F / '{print $1}')
+			RANGE_PRIVATE=$(cat /tmp/private_pool)
+
+			echo "dhcp-range=$RANGE_PRIVATE" >> $DNSMASQ_CONF
+			echo "dhcp-option=3,$ap2_ipaddr" >> $DNSMASQ_CONF
+			echo "dhcp-option=6,$ap2_ipaddr" >> $DNSMASQ_CONF
+			;;
+	esac
+}
+
+start () {
+	cp_HANDLER=$(uci get cp_switch.main.which_handler)
+	has_dhcpd=$(uci get cp_switch."handler_${cp_HANDLER}".has_dhcpd)	
+	Myap_up=$(uci get mesh.Myap.up)
+	ETH_PORTS=$(uci get node.general.ethPorts)
+
+	mesh_ifname=$(uci -P /var/state get mesh.iface.ifname)
+
+	case $cp_HANDLER in
+		4|5|6) AP1_IFACE=tun0 ;;
+		*) AP1_IFACE=$(uci get cp_switch.main.iface) ;;
+	esac
+
+	DNSMASQ_CONF=/tmp/dnsmasq.conf
+	DNSMASQ_OPTIONS=" --resolv-file=/etc/resolv.conf"
+	[ -s /etc/ethers ] && DNSMASQ_OPTIONS=" --read-ethers ${DNSMASQ_OPTIONS}"
+
+	IFACES=
+	if [ 1 -eq "$has_dhcpd" ] ; then 
+		#we want dnsmasq to provide only DNS service on chilli_controlled_interface (C_IFACE)
+		C_IFACE=$(uci get cp_switch.main.iface)
+		DNSMASQ_OPTIONS="${DNSMASQ_OPTIONS} no-dhcp-interface=${C_IFACE}"
+		[ 1 -eq "$Myap_up" ] && { 
+			ap2_ifname=$(uci -P /var/state get wireless.private.ifname)		
+			IFACES=",${ap2_ifname}"
+			k_dnsmasqConf=0
+		}
+	else 
+		IFACES=",${AP1_IFACE}"
+			k_dnsmasqConf=1
+		[ 1 -eq "$Myap_up" ] && { IFACES=",${AP1_IFACE}, ${ap2_ifname}"; k_dnsmasqConf=2;}
+	fi		
+	
+	if [ 1 -eq "$(uci get node.general.role)" ]; then
+		# Don't bind to the wan interfaces or dhcp server conflicts will occur 
+		# on networks where more than one gateway is connected to an uplink 
+		# gateway running a dhcp server.  Ironically, binding to wan interfaces 
+		# on networks with redundant gateways decreases the reliability of the 
+		# network as the number of redundant gateways increases. 
+		WAN_IFACE=$(uci get node.general.wanPort)
+		DNSMASQ_OPTIONS="${DNSMASQ_OPTIONS} -I $mesh_ifname -I $WAN_IFACE $IFACES"	
+	else
+		DNSMASQ_OPTIONS="${DNSMASQ_OPTIONS} -I $mesh_ifname $IFACES"	
+	fi
+	
+	dnsmasq_header
+	dnsmasq_body $k_dnsmasqConf
+	echo $DNSMASQ_OPTIONS > /tmp/dnsmasq.args
+
+	DHCP_SCRIPT=
+	[ 0 -eq "$cp_HANDLER" ] && {
+		DHCP_SCRIPT="--dhcp-script=/lib/robin/dnsmasq-callbacks.sh --resolv-file=/etc/resolv.conf"
+	}
+
+	dnsmasq $DHCP_SCRIPT -C $DNSMASQ_CONF $DNSMASQ_OPTIONS
+}
+
+stop () {
+	killall -9 dnsmasq 
+}
+#

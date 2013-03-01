@@ -1,0 +1,72 @@
+#!/bin/sh /etc/rc.common
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+START=11
+
+apply_profile() {
+	PROFILE_PATH="/etc/defprofile/$1"
+
+# CONFIGCHANGE
+#	cp -f ${PROFILE_PATH}/config.sh /lib/robin/preup/80_config.sh
+#	cp -f ${PROFILE_PATH}/robin.script /usr/share/udhcpc && chmod +x /usr/share/udhcpc/robin.script
+
+#	sh ${PROFILE_PATH}/apply_profile.sh
+}
+
+sym_links() {
+# TOOLCHANGE
+#	ln -sf /usr/bin/ping /usr/sbin/ping	
+#	ln -sf /etc/init.d/timing /etc/init.d/cron
+#	ln -sf /bin/busybox /usr/sbin/brctl
+#	ln -sf /sbin/REBOOT /sbin/reboot
+#
+#	[ -e /usr/bin/wget-matrixssl ] && ln -sf /usr/bin/wget-matrixssl /usr/bin/wget 
+#	[ -e /usr/bin/fping6 ] && rm -f /usr/bin/fping6 
+}
+
+start() {
+# TARGETCHANGE
+#	. /lib/ar71xx.sh
+
+	HW_WATCHDOG=0
+
+	KERNEL_VERSION=$(uname -r |awk '{pippo = substr($1, 5, 2) ; print pippo}')
+	ETH0_MAC=$(ifconfig eth0 |grep HW |awk '{print $5}')
+# TARGETCHANGE
+#	DEV_NAME=$(ar71xx_board_name)
+	DEV_NAME="genericboard"
+	
+	[ -e /etc/config/node ] && rm -f /etc/config/node
+	echo -n > /etc/config/node
+	uci set node.general=node
+	uci commit node
+
+	uci batch <<-EOF
+		set node.general.board=$DEV_NAME
+		set node.general.myMAC=$ETH0_MAC
+		set node.general.kernel=$KERNEL_VERSION
+		set node.general.hw_watchdog=$HW_WATCHDOG
+		commit node
+	EOF
+
+	sym_links
+
+	apply_profile $DEV_NAME
+}

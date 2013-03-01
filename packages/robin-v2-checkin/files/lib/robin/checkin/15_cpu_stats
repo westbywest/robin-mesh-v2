@@ -1,0 +1,28 @@
+#!/bin/sh
+
+STATUS_FILE=/var/run/status_file
+
+echo "get cpu stats..."
+
+MEMFREE=$(free |grep 'Mem:' |awk '{print $4}')
+
+LOAD=$(uptime | awk -F'average:' '{gsub(/[ \t]+/,"",$2);print $2}')
+	
+TIMEB=$(grep btime /proc/stat | awk '{print $2'})
+TIMENOW=$(date +"%s")
+
+DIFF=$(expr $TIMENOW - $TIMEB)
+DAYS=$(expr $DIFF / 86400)
+DIFF=$(expr $DIFF \% 86400)
+HOURS=$(expr $DIFF / 3600)
+DIFF=$(expr $DIFF \% 3600)
+MIN=$(expr $DIFF / 60)
+
+printf "%0dd:%0dh:%02dm\n\r" $DAYS $HOURS $MIN > /tmp/now
+UPTIME=$(cat /tmp/now)
+
+LAST_REBOOT=$(cat /etc/reboot_reasons |tail -1 |awk '{print $1}')
+
+echo "&memfree=${MEMFREE}&load=${LOAD}&uptime=${UPTIME}-${LAST_REBOOT}" >> $STATUS_FILE
+#
+

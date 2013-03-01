@@ -1,0 +1,40 @@
+#!/bin/sh
+#gateway_to_inet
+
+inet_test () {
+	if [ 1 -eq "$(/lib/robin/inet-test.sh)" ] ; then 
+		return 1 #we got a lease but no inet
+		else #we have inet too
+		return 0 
+	fi
+}
+
+[ "$(uci get node.general.role)" -eq 1 ] && {
+	REASON=12
+
+	# internet test	
+	echo "checking inet connection..."
+	inet_test
+	inet_test_result=$?
+
+	if [ "$inet_test_result" -eq 0 ]
+		then
+		rm -f /tmp/inet.failures
+		return 0
+
+		else
+		echo "mark" >> /tmp/inet.failures
+
+		if [ "$(cat /tmp/inet.failures |wc -l)" -gt 1 ]
+			then
+#			/sbin/do_reboot $REASON
+# READONLY
+#			/sbin/iwag-d
+			logger 80_gateway_to_inet iwag-d
+			fi
+
+		return 1
+		fi
+}
+#
+

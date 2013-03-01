@@ -1,0 +1,42 @@
+#!/bin/sh
+#core_jobs
+
+update_rate=$(uci get management.enable.update_rate)
+update_rate="${update_rate:=5}"
+[ "$update_rate" -ge 5 -a "$update_rate" -le 30 ] || update_rate="5"
+
+ULW=$(uci get management.enable.upgrade_f) 
+ULW="${ULW:=3}"
+UUW=$(uci get management.enable.upgrade_t)
+UUW="${UUW:=5}"
+upgrade_window="${ULW}-${UUW}"
+
+# Hour to update the clock
+time_to_sync=$(hexdump -d -n2 /dev/urandom | awk 'NF > 1 {print $2 % 23}')
+	
+# Minute to perform upgrade and mtd-upgrade
+diff=0 
+while [ "$diff" -lt 3 ] ; do
+	a=1 
+	while [ "$a" -lt 5 ] ; do a=$(hexdump -d -n2 /dev/urandom | awk 'NF > 1 {print $2 % 60}') ; done
+	b=1
+	while [ "$b" -lt 5 ] ; do b=$(hexdump -d -n2 /dev/urandom | awk 'NF > 1 {print $2 % 60}') ; done
+	if [ "$b" -gt "$a" ] ; then c=$a ; a=$b ; b=$c ; fi
+	diff=$(echo $a $b | awk '{printf( "%i\n", $1 - $2 )}')
+done
+upgraderunminute=$a ; mtdupgraderunminute=$b
+ 	
+# Minute to perform update. Repeated every 5 minutes
+updaterunminute=$(hexdump -d -n2 /dev/urandom | awk 'NF > 1 {print $2 % 5}')
+ 	
+# Second value is used for all jobs launched via cron
+nodedelaysecond=$(hexdump -d -n2 /dev/urandom | awk 'NF > 1 {print $2 % 300}')
+	
+(   
+	echo "0	$time_to_sync	*	*	* /lib/robin/settime.sh"	
+	echo "$upgraderunminute	$upgrade_window	*	*	* /sbin/upgrade"
+	echo "0-59/2	*	*	*	* /lib/robin/tts-check.sh"
+	echo "0-59/${update_rate}	*	*	*	* /sbin/dashboard_checkin.sh $nodedelaysecond"
+) | crontab - 2>&-   
+#
+

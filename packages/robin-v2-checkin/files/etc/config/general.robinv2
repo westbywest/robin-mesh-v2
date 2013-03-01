@@ -1,0 +1,13 @@
+config general services
+	option name_srv	'208.67.222.222'
+	option upstream	'0'
+	option updt_srv     'checkin.cloudtrax.com'
+	option checker      'checkin-batman.php'
+	option upgd_srv	''
+	option beat_srv	''
+	option ntpd_srv	'tick.greyware.com'
+	option cstm_srv     'www.open-mesh.com/firmware/mr3201a/'
+	option base_beta	''
+	option base_test	''
+	option via_proxy	'0.0.0.0:0'
+

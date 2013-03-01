@@ -1,0 +1,13 @@
+#!/bin/sh
+#logger_filter
+
+[ "$LOG" -gt 0 -a "$node_role" -eq 1 ] && {
+
+	ipt -I LOGGER -t nat -p udp --dport 53  -j RETURN
+
+	ipt -I LOGGER -t nat -p udp --dport 161 -j RETURN
+	ipt -I LOGGER -t nat -p udp --sport 161 -j RETURN
+	ipt -I LOGGER -t nat -p udp --dport 162 -j RETURN
+	ipt -I LOGGER -t nat -p udp --sport 162 -j RETURN
+}
+#

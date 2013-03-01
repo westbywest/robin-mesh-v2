@@ -1,0 +1,38 @@
+# expected format:
+# protocol	port
+
+#epmap (135)
+tcp	135
+udp	135
+
+#netbios (137-139 & 445)
+tcp	137
+tcp	138
+tcp	139
+tcp	445
+udp	137
+udp	138
+udp	139
+udp	445
+
+#krb (524)
+tcp	524
+udp	524
+
+#rpc emap (593)
+tcp	593
+udp	593
+
+#Borland-djs (707)
+tcp	707	
+udp	707
+
+#gnutella-rtr gnutella-svc (6346 & 6347)
+tcp	6346
+tcp	6347
+udp	6346
+udp	6347
+
+#upnp (1900-udp & 5000-tcp)
+tcp	5000
+udp	1900

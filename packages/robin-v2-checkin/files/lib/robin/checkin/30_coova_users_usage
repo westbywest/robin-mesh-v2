@@ -1,0 +1,61 @@
+#!/bin/sh
+
+STATUS_FILE=/var/run/status_file
+cp_HANDLER=$(uci get cp_switch.main.which_handler)
+[ "$cp_HANDLER" -lt 4 -o "$cp_HANDLER" -gt 6 ] && exit 0
+
+echo "get coova users/usage report..."
+
+rm -f /tmp/topUsers
+users=0 ; kbup=0 ; kbdown=0 ; top_users=
+tot_kb_up=0 ; tot_kb_down=0 
+
+UNIX_SOCKET=$(find /var/run/chilli* |grep 'sock')
+chilli_query -s $UNIX_SOCKET list > /tmp/chilli_clients
+
+[ -s /tmp/chilli_clients ] || {
+	echo "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
+	echo "&top_users=${TOP_USERS}" >> $STATUS_FILE
+
+	return
+}
+
+while read RECORD ; do
+	session=$(echo $RECORD | awk '{print $5}')	
+	if [ 1 -eq "$session" ] ; then
+		
+		users=$((users +1))	
+		MAC_addr=$(echo $RECORD |awk '{print $1}'|sed y/-/:/ |tr A-Z a-z)
+		user_name=$(echo $RECORD | awk '{print $6}')			
+			
+		k_swap_oct=$(echo $RECORD | awk '{print $12}')
+		if [ 0 -eq "$k_swap_oct" ] ; then  
+			down=$(echo $RECORD | awk '{print $9}')
+			up=$(echo $RECORD | awk '{print $10}')				
+		else
+			down=$(echo $RECORD | awk '{print $10}')
+			up=$(echo $RECORD | awk '{print $9}')                	
+		fi
+			
+		kb_down=$(echo $down |tr '/' ' ' |awk 'OFMT = "%.0f" {print ($1 / 1024)}')
+		kb_up=$(echo $up |tr '/' ' ' |awk 'OFMT = "%.0f" {print ($1 / 1024)}')		
+		KB_t=$(echo $kb_up $kb_down |awk '{print ($1 + $2)}')
+			
+		record="${KB_t},${kb_down},${kb_up},${MAC_addr},${user_name}"
+		echo $record >> /tmp/topUsers		
+			
+		tot_kb_up=$(echo $tot_kb_up $kb_up |awk '{print ($1 + $2)}')		
+		tot_kb_down=$(echo $tot_kb_down $kb_down |awk '{print ($1 + $2)}')
+	fi
+           
+done < /tmp/chilli_clients
+echo "&users=${users}&kbup=${tot_kb_up}&kbdown=${tot_kb_down}" >> $STATUS_FILE
+		
+if [ -e /tmp/topUsers ] ; then
+	sort -r /tmp/topUsers |head -n 10 > /tmp/sort_topUsers
+	while read riga ; do
+		TOP_USERS="${TOP_USERS}+${riga}" 
+	done < /tmp/sort_topUsers
+fi
+echo "$&top_users=${TOP_USERS}" >> $STATUS_FILE
+#

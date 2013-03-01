@@ -1,0 +1,10 @@
+#!/bin/sh
+#strict-mesh (allow only traffic from nodes which belong to the same network name)
+
+ARRANGE_MESH=$(uci get management.enable.strict_mesh)
+
+[ "$ARRANGE_MESH" -gt 0 ] && {
+	[ 9 -eq "$ARRANGE_MESH" ] && sh /lib/robin/limited-mesh.sh
+	sh /lib/robin/strict-mesh.sh
+}
+#

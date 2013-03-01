@@ -1,0 +1,9 @@
+config 'installation' 'node'
+	option 'DD_lat' '?'
+	option 'DD_lon' '?'
+	#send to Google Maps as: DD_lat,DD_lon
+	#option 'DD_lat' '28.212106'
+	#option 'DD_lon' '-177.370663'
+
+	option 'predef_role' '-1'
+#

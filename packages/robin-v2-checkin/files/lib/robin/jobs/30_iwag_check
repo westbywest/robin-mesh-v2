@@ -1,0 +1,13 @@
+#!/bin/sh
+#I_Was_A_Gateway check
+
+PREDEF_ROLE=$(uci get installation.node.predef_role)
+
+if [ "$PREDEF_ROLE" -ne 0 ]; then
+	[ "$(uci get node.general.role)" -eq 0 ] && {
+		crontab -l > /tmp/crontab
+		echo "0-59/10	*	*	*	* /lib/robin/iwag-test.sh" >> /tmp/crontab	
+		cat /tmp/crontab | crontab - 2>&-
+	}
+fi
+#

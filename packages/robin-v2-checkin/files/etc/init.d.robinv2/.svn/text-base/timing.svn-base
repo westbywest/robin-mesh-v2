@@ -1,0 +1,59 @@
+#!/bin/sh /etc/rc.common
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+START=76
+
+# start/stop cron daemon and HW watchdog
+
+start () {
+	. /lib/robin/plugins.sh
+
+	/sbin/hw-heartbeat.sh # ...so we are safe while crontab is edited and crond is halted
+	killall -9 crond > /dev/null 2>&1
+	
+	source_plugins "jobs"
+	
+	mkdir -p /var/spool/cron
+	[ -L /var/spool/cron/crontabs ] || ln -s /etc/crontabs /var/spool/cron/crontabs
+	
+	crond -l 10 -c /etc/crontabs
+}
+
+stop() {
+#    keep hardware watchdog alive and stop the other scheduled tasks
+	/sbin/hw-heartbeat.sh
+	killall -9 crond > /dev/null 2>&1 
+	
+	if [ 1 -eq "$(uci get node.general.hw_watchdog)" ] ; then
+		(   
+			 echo "0-59/3	*	*	*	* /sbin/hw-heartbeat.sh"			
+		) | crontab - 2>&- 
+		sleep 1
+		
+		mkdir -p /var/spool/cron
+		[ -L /var/spool/cron/crontabs ] || ln -s /etc/crontabs /var/spool/cron/crontabs
+		crond -l 10 -c /etc/crontabs
+	fi 
+}
+#
+
+		
+	
+	

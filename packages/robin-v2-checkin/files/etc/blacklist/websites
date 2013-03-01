@@ -1,0 +1,5 @@
+# websites
+# redirect all blacklist websites
+#
+REDIRECT_TO www.google.com
+

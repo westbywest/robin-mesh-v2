@@ -1,0 +1,20 @@
+00 external reboot
+10 channel drift
+12 no inet 
+13 channel switch 
+14 routing protocol switch 
+15 rescue failed 
+22 low memory 
+23 no wifi 
+25 bad lease 
+30 routing failure 
+32 dnsmasq failure 
+34 udhcpc failure 
+35 captive portal failure 
+36 olsrd failure 
+52 restore gateway role 
+90 upgrade
+91 reboot needed after update
+92 update chilli
+93 scheduled reboot
+99 upgrade failed

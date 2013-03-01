@@ -1,0 +1,30 @@
+#!/bin/sh
+
+STATUS_FILE=/var/run/status_file
+echo "get neighbors TQ..."
+
+rm -f /tmp/nbrs /tmp/ranks
+
+isAneighboor() {
+	if [ $1 = $2 ] && [ "$3" -gt 0 ] ; then
+		#nbs="${nbs}$2;"
+		#ranks="${ranks}$3;"
+		echo -e "$2 \t $3" >> /tmp/ranks
+	fi
+}
+
+ranks="" ; nbs=""
+
+# CONFIGCHANGE
+#echo "/link" |nc 127.0.0.1 8090 |awk 'FNR>5' > /tmp/links
+echo "/link" |nc 127.0.0.1 2006 |awk 'FNR>5' > /tmp/links
+while read record ; do
+	nbs="${nbs}$(echo $record |awk '{print $2}');"
+	rank=$(echo $record | awk '{ printf( "%i\n", ($4*$5*255) )}')	
+	ranks="${ranks}$rank;"    		
+done < /tmp/links
+     
+nbs="${nbs}z" ; nbs_=$(echo $nbs |sed "s/;z//g")
+ranks="${ranks}z" ; ranks_=$(echo $ranks |sed "s/;z//g")
+	
+echo "&nbs=${nbs_}&rank=${ranks_}" >> $STATUS_FILE

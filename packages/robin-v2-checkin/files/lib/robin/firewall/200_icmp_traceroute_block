@@ -1,0 +1,17 @@
+#!/bin/sh
+##ICMP_BLOCK traceroute (tracert) block
+
+ICMP_block=$(uci get iprules.filter.ICMP_BLOCK)
+node_role=$(uci get node.general.role)
+
+[ "$ICMP_block" -eq  1 -a "$node_role" -eq 1 ] && {
+	echo "applying traceroute block rules..."
+
+	#FORWARDING (connections routed through the router)
+	ipt -I FORWARD -p ICMP --icmp-type 11 -j DROP
+	ipt -I FORWARD -p ICMP --icmp-type port-unreachable -j DROP
+
+	#INPUT (connections with the router as destination)
+	ipt -I INPUT -p ICMP --icmp-type 11 -j DROP
+	ipt -I INPUT -p ICMP --icmp-type port-unreachable -j DROP
+}

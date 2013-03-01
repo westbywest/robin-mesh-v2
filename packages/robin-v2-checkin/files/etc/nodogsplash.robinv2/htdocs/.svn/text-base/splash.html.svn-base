@@ -1,0 +1,54 @@
+<!DOCTYPE HTML PUBLIC "-//W3C//DTD HTML 4.01//EN"
+"http://www.w3.org/TR/html4/strict.dtd">
+<html><head><title>Nifty Corners: Javascript and CSS rounded corners</title>
+
+<meta http-equiv="content-type" content="text/html; charset=iso-8859-1">
+<meta name="generator" content="HAPedit 3.1">
+<style type="text/css">
+body{padding: 20px;background: #707883;color: #222;text-align: center;
+    font: 85% "Trebuchet MS",Arial,sans-serif}
+h1,h2,p{margin: 0;padding: 0 10px;font-weight:normal}
+p{padding: 0 10px 15px}
+h1{font-size: 250%;color: #FFF;letter-spacing: 1px}
+h2{font-size: 200%;line-height:1;color:#002455 }
+div#container{width:550px !important; width /**/:560px;
+    margin: 0 auto;padding:5px;text-align:left;background:#FFF}
+div#header{background: #BFDDED;padding: 10px;text-align:center}
+div#content{float:left;width:400px;padding:10px 0;margin:5px 0;background: #778CCA}
+div#nav{float:right;width:145px;padding:10px 0;margin:5px 0;background: #FFD154}
+div#nav h2{font-size: 120%;color: #9E4A24}
+div#footer{clear:both;width:550px;background: #C4E786;padding:5px 0;text-align:center}
+</style><script type="text/javascript"                                              src="/pages/niftycube.js">
+</script>
+<script type="text/javascript">
+window.onload=function(){
+Nifty("div#container");
+Nifty("div#content,div#nav","same-height small");
+Nifty("div#header,div#footer","small");
+}
+</script>
+<meta content="" name="Keywords">
+<meta content="" name="Description"></head><body link="#000000" text="#000000">
+<div id="container">
+<div id="header"><h1>$gatewayname Free WiFi!<br/></h1></div>
+<div id="content">
+<p><span style="font-size: 12pt;">Welcome to our open community WiFi network!</span></p>
+<h2><span style="font-weight: bold;">Open and Free for Us All!</span><br/></h2>
+<br/><p><span style="font-size: 12pt;">This network is brought to you by Open-Mesh.com, an open-source initiative to provide wireless for schools, communities, low-income housing and the developing world.</span></p></div>
+<div id="nav">
+<h2>Be Respectful.</h2>
+<p><br/>We ask just a few things:&nbsp; Be respectful of others and please refrain from large uploads or downloads to keep the network fast for everyone!</p>
+</div>
+<div style="font-weight: bold;" id="footer">
+<table bgcolor="" border="0" cellpadding="0" cellspacing="0" width="100%"><tbody>
+<tr>
+<td>
+<img title="" alt=""  src="images/open-mesh-small.png" align="bottom" border="0" height="37" width="313"/></td>
+<td>
+<a href="$authtarget"><span style="font-size: 18pt;">Enter!</span></a>&nbsp;</td>
+</tr>
+</tbody>
+</table>
+</div>
+</div>
+</body></html>

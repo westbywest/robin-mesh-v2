@@ -1,0 +1,15 @@
+config iprules filter
+	option SMTP_rdir       0
+	option SMTP_dest       0.0.0.0
+	option AP1_bridge
+	option AP1_isolation   0
+	option AP2_bridge
+	option AP2_isolation   0
+	option LAN_BLOCK       0
+	option ICMP_BLOCK      0	
+	option MTU_CLAMP       9 
+	option dashboard_IP    0.0.0.0
+	option enable_log      0
+	option log_server      
+	option port_block      0
+#

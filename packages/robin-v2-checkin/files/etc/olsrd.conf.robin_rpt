@@ -1,0 +1,37 @@
+#########################################
+### Robin Mesh repeater configuration ###
+#########################################
+
+DebugLevel 0
+IpVersion 4
+AllowNoInt yes
+Pollrate 0.05
+TcRedundancy 2
+MprCoverage 7
+LinkQualityFishEye 1
+LinkQualityLevel 2 
+UseHysteresis no
+
+UseNiit no
+
+SmartGateway no
+SmartGatewayAllowNAT yes
+
+Interface "wlan0"
+{
+	Ip4Broadcast 255.255.255.255
+	HelloInterval 6.0
+	HelloValidityTime 108.0
+	TcInterval 4.0
+	TcValidityTime 324.0
+	MidInterval 18.0
+	MidValidityTime 324.0
+	HnaInterval 18.0
+	HnaValidityTime 108.0
+}
+ 
+LoadPlugin "olsrd_txtinfo.so.0.1"
+{
+	PlParam "port" "8090"
+	PlParam "Host" "127.0.0.1"
+}

@@ -1,0 +1,5 @@
+#!/bin/sh 
+
+rdate -s ntp0.cornell.edu || rdate -s ac-ntp0.net.cmu.edu || rdate -s time.ien.it       
+[ "$(ps |grep crond |grep -v grep |wc -l)" -eq 0 ] && /etc/init.d/timing start && sleep 3
+#

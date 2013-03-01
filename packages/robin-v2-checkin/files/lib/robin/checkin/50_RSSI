@@ -1,0 +1,32 @@
+#!/bin/sh
+
+STATUS_FILE=/var/run/status_file
+CONVERT_TO_RSSI=' { printf( "%2.0f\n", ((95 - $0)/0.6)) } '
+
+STATION_IP=
+NEIG=""
+RSSI=""
+
+iw dev $(uci -P /var/state get network.mesh.ifname) station dump > /tmp/station_dump
+
+while read record ; do
+	case $(echo $record |awk '{print $1}') in
+		'Station') 
+			STATION_MAC=$(echo $record |awk '{print $2}') 
+			STATION_IP=$(grep -i $STATION_MAC /etc/update/network_nodes |awk '{print $2}')
+			;;
+		'signal:') 
+			[ -n "$STATION_IP" ] && {
+				STATION_dBm=$(echo $record |awk '{print $2}' |sed s/'-'//g) 
+  				conv=$(echo $STATION_dBm | awk "$CONVERT_TO_RSSI")
+				NEIG="${NEIG}$STATION_IP;"
+				RSSI="${RSSI}$conv;"
+			}
+			;;
+	esac
+done < /tmp/station_dump
+
+NEIG="${NEIG}z" && NEIG_=$(echo $NEIG |sed "s/;z//g")
+RSSI="${RSSI}z" && RSSI_=$(echo $RSSI |sed "s/;z//g")	
+echo "&nodes=${NEIG_}&rssi=${RSSI_}" >> $STATUS_FILE
+#

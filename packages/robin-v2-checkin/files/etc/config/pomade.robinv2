@@ -1,0 +1,12 @@
+config 'pomade' 'server'
+	option 'host'
+	option 'private_lan' '0'
+	option 'https' '0'
+	option 'mode' 'php' 
+	option 'is_cstm_srv' '0'
+
+config 'pomade' 'client'
+	option 'enabled' '0'
+	option 'private_cfg' '1' 
+	option 'on_err_ignore' '1'
+#

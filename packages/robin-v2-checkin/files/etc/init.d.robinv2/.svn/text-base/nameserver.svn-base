@@ -1,0 +1,96 @@
+#!/bin/sh /etc/rc.common
+
+<<COPYRIGHT
+
+Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+
+This program is free software; you can redistribute it and/or
+modify it under the terms of version 2 of the GNU General Public
+License as published by the Free Software Foundation.
+
+This program is distributed in the hope that it will be useful,
+but WITHOUT ANY WARRANTY; without even the implied warranty of
+MERCHANTABILITY or FITNESS FOR A PARTICULAR PURPOSE.  See the
+GNU General Public License for more details.
+
+You should have received a copy of the GNU General Public License
+along with this file.  If not, see <http://www.gnu.org/licenses/>.
+
+COPYRIGHT
+
+# /init.d/nameserver
+
+START=75
+
+use_public_dns() {
+	local n=$1
+
+	case $n in
+		1) PUBLIC_DNS="opendns" ;;
+		2) PUBLIC_DNS="familyshield" ;;
+		3) PUBLIC_DNS="google" ;;
+		4) PUBLIC_DNS="scrubit" ;;
+		5) PUBLIC_DNS="dnsadvantage" ;;
+		0) 
+			if [ 1 -eq "$(uci get node.general.role)" ]; then
+				PUBLIC_DNS="DHCP provided DNS" 
+				cat /tmp/resolv.conf.dhcp > /tmp/resolv.conf
+				echo "nameserver 127.0.0.1" >> tmp/resolv.conf
+
+				echo "use $PUBLIC_DNS"
+				return
+
+			else
+				PUBLIC_DNS="opendns"
+			fi
+			;;
+	esac
+
+	ns1=$(uci get dns".${PUBLIC_DNS}."nameserver1)
+	ns2=$(uci get dns".${PUBLIC_DNS}."nameserver2)
+	
+	cat > /tmp/resolv.conf <<-resolvers
+		nameserver $ns1
+		nameserver $ns2
+		nameserver 127.0.0.1	
+	resolvers
+
+	echo "use "$PUBLIC_DNS" public DNS"
+}
+
+configure_resolver() {
+	RESOLV_CONF="/etc/resolv.conf"
+	USE_PUBLIC_NS="/etc/resolv.conf.openDNS"
+	SHOULD_CHANGE_NS=0
+
+	rm -f /tmp/resolv.conf
+
+	if [ "$(uci get general.services.upstream)" -eq 1 ] ; then
+		provisioned_ns=$(uci get general.services.name_srv)
+		[ -n "$provisioned_ns" ] && SHOULD_CHANGE_NS=1
+	fi
+
+	if [ 1 -eq "$SHOULD_CHANGE_NS" ]; then
+		provisioned_ns=$(echo $provisioned_ns|sed 's/,/ /g')
+		for s in $provisioned_ns; do
+			echo "nameserver $s" >> /tmp/resolv.conf
+		done
+
+	else
+		dns_id=$(uci get management.enable.public_dns)
+		[ -n "$dns_id" ] || dns_id=1
+		use_public_dns $dns_id
+	fi	
+	cp -f /tmp/resolv.conf $RESOLV_CONF
+}
+
+start() {
+	configure_resolver
+}
+
+config() {
+	configure_resolver
+}
+
+EXTRA_COMMANDS="config"
+#
