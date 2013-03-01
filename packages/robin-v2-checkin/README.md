@@ -1,5 +1,5 @@
 robin-v2-checkin
-==========
+================
 
 This package will perform checkins to the Cloudtrax dashboard at https://cloudtrax.com or to Open Source clones like the Meshconnect dashboard.  At present, these checkins are read-only, i.e any configuration changes received from a dashboard in response to a checkin are ignored.  This code is NOT compatible with the proprietary NG dashboard features also offered by Cloudtrax.
 
@@ -8,6 +8,16 @@ This code was derived from the ROBIN Mesh Firmware http://wiki-robin.meshroot.co
 Modifications/derivations by Benjamin West / WasabiNet <ben@gowasabi.net> http://gowasabi.net
 
 CAVEAT: This code is still under development.  The author makes no guarantee that it will not raid your kitchen of all food one night and kill a kitten.
+
+Notes
+=====
+
+Legend for various tags added to code for the author's reference:
+
+- READONLY marks changes to prevent node configuration changes by check-in script
+- CONFIGCHANGE marks config changes that depart from robin convention
+- TARGETCHANGE marks changes to make robin checkin target independent
+- TOOLCHANGE makrs changes to prevent robin from overriding default OpenWRT tools/commands
 
 License
 =======
