@@ -19,7 +19,7 @@
 include $(TOPDIR)/rules.mk
 
 PKG_NAME:=robin-v2-checkin
-PKG_REV:=2
+PKG_REV:=2.1
 PKG_VERSION:=v$(PKG_REV)
 PKG_RELEASE:=11n
 #PKG_BRANCH=test
@@ -36,9 +36,9 @@ define Package/robin-v2-checkin/Default
 	CATEGORY:=Network
 	DEFAULT:=y
 	TITLE:=ROBIN Mesh Network Dashboard Checkin
+	URL:=http://wiki-robin.meshroot.com/
+	MAINTAINER:=Antonio Anselmi <tony.anselmi@gmail.com>, et al
 	DEPENDS:=+dnsmasq +tcpdump-mini +fping +wget +uhttpd
-    URL:=http://wiki-robin.meshroot.com/
-    MAINTAINER:=Antonio Anselmi <tony.anselmi@gmail.com>, et al
 endef
 
 # nodogsplash dependency commented out
