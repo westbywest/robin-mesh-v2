@@ -32,25 +32,24 @@ PKG_CONFIG_DEPENDS:= \
 include $(INCLUDE_DIR)/package.mk
 
 define Package/robin-v2-checkin/Default
-	SECTION:=net
-	CATEGORY:=Network
-	DEFAULT:=y
-	TITLE:=ROBIN Mesh Network Dashboard Checkin
-	URL:=http://wiki-robin.meshroot.com/
-	MAINTAINER:=Antonio Anselmi <tony.anselmi@gmail.com>, et al
-	DEPENDS:=+dnsmasq +tcpdump-mini +fping +wget +uhttpd
+  SECTION:=net
+  CATEGORY:=Network
+  TITLE:=ROBIN Mesh Network Dashboard Checkin
+  URL:=http://wiki-robin.meshroot.com/
+  MAINTAINER:=Antonio Anselmi <tony.anselmi@gmail.com>, et al
+  DEPENDS:=+dnsmasq +tcpdump-mini +fping +wget +uhttpd
 endef
 
 # nodogsplash dependency commented out
 
 define Package/robin-v2-checkin/Default/description
-	Dashboard checkin tool for ROBIN zero-config mesh network.
+ Dashboard checkin tool for ROBIN zero-config mesh network.
 endef
 
 define Package/robin-v2-checkin
 $(call Package/robin-v2-checkin/Default)
-	TITLE+= (full)
-	DEPENDS:=+olsrd +coova-chilli
+  TITLE+= (full)
+  DEPENDS:=+olsrd +coova-chilli
 endef
 
 define Package/robin-v2-checkin/description
@@ -61,14 +60,14 @@ endef
 
 define Package/robin-v2-checkin-mini
 $(call Package/robin-v2-checkin/Default)
-  TITLE+= (minimal)
-  DEPENDS:=+olsrd
+ TITLE+= (minimal)
+ DEPENDS:=+olsrd
 endef
 
 define Package/robin-v2-checkin-mini/description
-$(call Package/robin-v2-checkin-mini/Default/description)
-  .
-  This package contains only a minimal ROBIN Dashboard checkin install.
+$(call Package/robin-v2-checkin/Default/description)
+ .
+ This package contains only a minimal ROBIN Dashboard checkin install.
 endef
 
 define Build/Prepare
@@ -82,10 +81,12 @@ define Build/Compile
 endef
 
 define Package/robin-v2-checkin/install
+	mkdir -p $(1)/bin
 	$(CP) ./files/bin/* $(1)/bin
+	mkdir -p $(1)/etc
 	$(CP) ./files/etc/* $(1)/etc
 	mkdir -p $(1)/lib/robin
-	$(CP) ./files/lib/robin/callbacks/* $(1)/lib/robin/callbacks
+	$(CP) ./files/lib/robin/callbacks $(1)/lib/robin
 	mkdir -p $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/10_node_status $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/15_cpu_stats $(1)/lib/robin/checkin
@@ -95,7 +96,7 @@ define Package/robin-v2-checkin/install
 	$(CP) ./files/lib/robin/checkin/30_nds_users_usage $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/30_nocp_users_usage $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/40_network_transfer_rate $(1)/lib/robin/checkin
-	$(CP) ./files/lib/robin/checkin/45_neighors $(1)/lib/robin/checkin
+	$(CP) ./files/lib/robin/checkin/45_neighbors $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/50_RSSI $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/plugin.list.full $(1)/lib/robin/checkin/plugin.list
 	$(CP) ./files/lib/robin/checkin-functions.sh $(1)/lib/robin
@@ -120,7 +121,7 @@ define Package/robin-v2-checkin/install
 	$(CP) ./files/lib/robin/jobs $(1)/lib/robin
 	$(CP) ./files/lib/robin/last-hop.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/limited-mesh.sh $(1)/lib/robin
-	$(CP) ./files/lib/robin/plugin.sh $(1)/lib/robin
+	$(CP) ./files/lib/robin/plugins.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/postup $(1)/lib/robin
 	mkdir -p $(1)/lib/robin/preup
 	$(CP) ./files/lib/robin/preup/00_installation_check.sh $(1)/lib/robin/preup
@@ -139,7 +140,7 @@ define Package/robin-v2-checkin/install
 	$(CP) ./files/lib/robin/preup/90_hostname.sh $(1)/lib/robin/preup
 	$(CP) ./files/lib/robin/preup/90_olsrd_version.sh $(1)/lib/robin/preup
 	$(CP) ./files/lib/robin/preup/plugin.list $(1)/lib/robin/preup
-	$(CP) ./files/lib/robin/sched_reboot.sh $(1)/lib/robin
+	$(CP) ./files/lib/robin/sched-reboot.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/settime.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/strict-mesh.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/tts-check.sh $(1)/lib/robin
@@ -153,7 +154,9 @@ define Package/robin-v2-checkin/install
 	$(CP) ./files/lib/robin/watchout/70_repeater_to_gateway $(1)/lib/robin/watchout
 	$(CP) ./files/lib/robin/watchout/80_gateway_to_inet $(1)/lib/robin/watchout
 	$(CP) ./files/lib/robin/watchout/plugin.list.full $(1)/lib/robin/watchout/plugin.list
+	mkdir -p $(1)/sbin
 	$(CP) ./files/sbin/* $(1)/sbin
+	mkdir -p $(1)/usr/lib
 	$(CP) ./files/usr/lib/* $(1)/usr/lib
 	mkdir -p $(1)/usr/share
 	$(CP) ./files/usr/share/* $(1)/usr/share
@@ -171,23 +174,25 @@ define Package/robin-v2-checkin/install
 	$(CP) ./files/usr/sbin/update-olsr.sh $(1)/usr/sbin
 	$(CP) ./files/usr/sbin/update-radio.sh $(1)/usr/sbin
 	$(CP) ./files/usr/sbin/update-txpower.sh $(1)/usr/sbin
-	$(CP) ./files/usr/sbin/update-wifi $(1)/usr/sbin
+	$(CP) ./files/usr/sbin/update-wifi.sh $(1)/usr/sbin
 	mkdir -p $(1)/www
 	$(CP) ./files/www/* $(1)/www
 endef
 
 define Package/robin-v2-checkin-mini/install
+	mkdir -p $(1)/bin      
 	$(CP) ./files/bin/* $(1)/bin
+	mkdir -p $(1)/etc
 	$(CP) ./files/etc/* $(1)/etc
 	mkdir -p $(1)/lib/robin
-	$(CP) ./files/lib/robin/callbacks/* $(1)/lib/robin/callbacks
+	$(CP) ./files/lib/robin/callbacks $(1)/lib/robin
 	mkdir -p $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/10_node_status $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/15_cpu_stats $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/20_current_gateway $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/30_nocp_users_usage $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/40_network_transfer_rate $(1)/lib/robin/checkin
-	$(CP) ./files/lib/robin/checkin/45_neighors $(1)/lib/robin/checkin
+	$(CP) ./files/lib/robin/checkin/45_neighbors $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/50_RSSI $(1)/lib/robin/checkin
 	$(CP) ./files/lib/robin/checkin/plugin.list.minimal $(1)/lib/robin/checkin/plugin.list
 	$(CP) ./files/lib/robin/checkin-functions.sh $(1)/lib/robin
@@ -211,7 +216,7 @@ define Package/robin-v2-checkin-mini/install
 	$(CP) ./files/lib/robin/jobs $(1)/lib/robin
 	$(CP) ./files/lib/robin/last-hop.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/limited-mesh.sh $(1)/lib/robin
-	$(CP) ./files/lib/robin/plugin.sh $(1)/lib/robin
+	$(CP) ./files/lib/robin/plugins.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/postup $(1)/lib/robin
 	mkdir -p $(1)/lib/robin/preup
 	$(CP) ./files/lib/robin/preup/00_installation_check.sh $(1)/lib/robin/preup
@@ -230,7 +235,7 @@ define Package/robin-v2-checkin-mini/install
 	$(CP) ./files/lib/robin/preup/90_hostname.sh $(1)/lib/robin/preup
 	$(CP) ./files/lib/robin/preup/90_olsrd_version.sh $(1)/lib/robin/preup
 	$(CP) ./files/lib/robin/preup/plugin.list $(1)/lib/robin/preup
-	$(CP) ./files/lib/robin/sched_reboot.sh $(1)/lib/robin
+	$(CP) ./files/lib/robin/sched-reboot.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/settime.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/strict-mesh.sh $(1)/lib/robin
 	$(CP) ./files/lib/robin/tts-check.sh $(1)/lib/robin
@@ -243,7 +248,9 @@ define Package/robin-v2-checkin-mini/install
 	$(CP) ./files/lib/robin/watchout/70_repeater_to_gateway $(1)/lib/robin/watchout
 	$(CP) ./files/lib/robin/watchout/80_gateway_to_inet $(1)/lib/robin/watchout
 	$(CP) ./files/lib/robin/watchout/plugin.list.minimal $(1)/lib/robin/watchout/plugin.list
+	mkdir -p $(1)/sbin
 	$(CP) ./files/sbin/* $(1)/sbin
+	mkdir -p $(1)/usr/lib
 	$(CP) ./files/usr/lib/* $(1)/usr/lib
 	mkdir -p $(1)/usr/share
 	$(CP) ./files/usr/share/* $(1)/usr/share
@@ -258,7 +265,7 @@ define Package/robin-v2-checkin-mini/install
 	$(CP) ./files/usr/sbin/update-olsr.sh $(1)/usr/sbin
 	$(CP) ./files/usr/sbin/update-radio.sh $(1)/usr/sbin
 	$(CP) ./files/usr/sbin/update-txpower.sh $(1)/usr/sbin
-	$(CP) ./files/usr/sbin/update-wifi $(1)/usr/sbin
+	$(CP) ./files/usr/sbin/update-wifi.sh $(1)/usr/sbin
 	mkdir -p $(1)/www
 	$(CP) ./files/www/* $(1)/www
 endef
