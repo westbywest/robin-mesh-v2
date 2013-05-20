@@ -4,12 +4,12 @@ STATUS_FILE=/var/run/status_file
 
 echo "get network transfer rate..."
 
-ntr="999-KB/s"
 n_times="1"
 
 [ "$(uci get node.general.role)" -eq 0 ] && {
 	[ -e /tmp/current_ntr ] || /sbin/speed-test $n_times
-	NTR=$(cat /tmp/current_ntr) 
+        # curl speed_download output in Bytes/sec. Convert to Kbytes/sec.
+        NTR=$(cat /tmp/current_ntr | awk '{printf("%d\n", ($1 / 1024))}')"-KB/s"
 
 	rm -f /tmp/current_ntr
 }
