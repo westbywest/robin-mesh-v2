@@ -17,8 +17,8 @@ PMDE_REPLY=$WDIR/pomade.cfg
 lastCheckin=$WDIR/last_checkin
 key_config="#@#config"
 
-wget_opt="-t 1 -T 40 --no-cache"
-wget_opt_ssl="${wget_opt} --no-check-certificate"
+curl_opt="--retry 1 --connect-timeout 40 -s -L -# -v"
+curl_opt_ssl="${curl_opt} --insecure"
 
 REASON=91	
 
@@ -26,27 +26,22 @@ skip() { return; }
 
 do_checkin() {
 	STATUS_FILE=/var/run/status_file
-	data=
-
-	while read RECORD ; do
-		data="${data}${RECORD}"
-	done < $STATUS_FILE
-	echo $data > $WDIR/update.arg
+	cp $STATUS_FILE $WDIR/update.arg
 
 	if [ 1 -eq "$(uci get management.enable.https)" ]; then
 		case $(uci get management.enable.method_POST) in
-			0) wget $wget_opt_ssl "https://${DASHBOARD}?${data}" -O $DASHBOARD_REPLY ;;
-			1) wget $wget_opt_ssl --post-file $WDIR/update.arg "https://${DASHBOARD}" -O $DASHBOARD_REPLY ;;
+			0) curl $curl_opt_ssl -G --data-ascii @$WDIR/update.arg "https://${DASHBOARD}" -o $DASHBOARD_REPLY ;;
+			1) curl $curl_opt_ssl --data-ascii @$WDIR/update.arg "https://${DASHBOARD}" -o $DASHBOARD_REPLY ;;
 		esac
-		wget_result=$?
+		curl_result=$?
 
 		else
 
 		case $(uci get management.enable.method_POST) in
-			0) wget $wget_opt "http://${DASHBOARD}?${data}" -O $DASHBOARD_REPLY ;;
-			1) wget $wget_opt --post-file $WDIR/update.arg "http://${DASHBOARD}" -O $DASHBOARD_REPLY ;;
+			0) curl $curl_opt -G --data-ascii @$WDIR/update.arg "http://${DASHBOARD}" -o $DASHBOARD_REPLY ;;
+			1) curl $curl_opt --data-ascii @$WDIR/update.arg "http://${DASHBOARD}" -o $DASHBOARD_REPLY ;;
 		esac
-		wget_result=$?
+		curl_result=$?
 	fi
 }
 
@@ -63,12 +58,12 @@ do_checkin_pomade() {
 	}
 
 	case $(uci get pomade.server.https) in
-		'1') WGET=$wget_opt_ssl ; HTTP="https" ;;
-		'0') WGET=$wget_opt ; HTTP="http" ;;
+		'1') CURL=$curl_opt_ssl ; HTTP="https" ;;
+		'0') CURL=$curl_opt ; HTTP="http" ;;
 	esac
 
 	for attempt in $(seq 1 3); do
-		wget $WGET "${HTTP}://${PMDE_SERVER}/${PATH_TO_CFG}/pomade.${PMDE_MODE}" -O $PMDE_REPLY
+		curl $CURL "${HTTP}://${PMDE_SERVER}/${PATH_TO_CFG}/pomade.${PMDE_MODE}" -O $PMDE_REPLY
 		[ "$?" -eq 0 ] && return 0
 	done
 	return 1
@@ -95,13 +90,13 @@ checkin_dashboard () {
 	echo "check dashboard..."
 	
 	do_checkin
-	if [ "$wget_result" -ne 0 ]; then
+	if [ "$curl_result" -ne 0 ]; then
 		FALLBACK_IP=$(cat /etc/dashboard.fallback_ip)
 		logger -st ${0##*/} "failed checking the dashboard, try dashboard fallback IP $FALLBACK_IP"
 		DASHBOARD="${FALLBACK_IP}/${checker}"
 
 		do_checkin
-		[ "$wget_result" -ne 0 ] && {
+		[ "$curl_result" -ne 0 ] && {
 			logger -st ${0##*/} "failed checking the dashboard, exit."
 			exit
 		}		
@@ -150,7 +145,7 @@ custom_update () {
 	CUSTOM_MD5=$WDIR/custom.md5
 	[ -e $CUSTOM_MD5 ] || echo "$(md5sum /etc/robin_version | head -c 32)" > $CUSTOM_MD5	
 	
-	wget "http://${custom_host}custom.sh" -O /tmp/custom.sh
+	curl -L -# -v "http://${custom_host}custom.sh" -o /tmp/custom.sh
 	if [ "$?" -ne 0 ] ; then
 		logger -s -t  "$ME" "custom download failed!"
 		return 

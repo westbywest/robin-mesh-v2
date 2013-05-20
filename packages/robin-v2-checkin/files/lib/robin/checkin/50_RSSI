@@ -28,5 +28,5 @@ done < /tmp/station_dump
 
 NEIG="${NEIG}z" && NEIG_=$(echo $NEIG |sed "s/;z//g")
 RSSI="${RSSI}z" && RSSI_=$(echo $RSSI |sed "s/;z//g")	
-echo "&nodes=${NEIG_}&rssi=${RSSI_}" >> $STATUS_FILE
+echo -n "&nodes=${NEIG_}&rssi=${RSSI_}" >> $STATUS_FILE
 #

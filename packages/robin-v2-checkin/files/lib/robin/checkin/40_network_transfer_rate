@@ -14,4 +14,4 @@ n_times="1"
 	rm -f /tmp/current_ntr
 }
 
-echo "&NTR=${NTR}" >> $STATUS_FILE
+echo -n "&NTR=${NTR}" >> $STATUS_FILE

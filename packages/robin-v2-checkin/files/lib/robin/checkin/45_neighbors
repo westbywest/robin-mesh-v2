@@ -27,4 +27,4 @@ done < /tmp/links
 nbs="${nbs}z" ; nbs_=$(echo $nbs |sed "s/;z//g")
 ranks="${ranks}z" ; ranks_=$(echo $ranks |sed "s/;z//g")
 	
-echo "&nbs=${nbs_}&rank=${ranks_}" >> $STATUS_FILE
+echo -n "&nbs=${nbs_}&rank=${ranks_}" >> $STATUS_FILE

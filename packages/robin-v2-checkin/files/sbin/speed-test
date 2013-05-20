@@ -27,36 +27,29 @@ EXIT() {
 }
 
 download_test_file() {
-	#prevent lot of wget instances
-	p=$(ps |grep 'wget -O /tmp/dummy' |grep -v grep |awk '{print $1}')
+	#prevent lot of curl instances
+	p=$(ps |grep 'curl -o /tmp/dummy' |grep -v grep |awk '{print $1}')
 	while [ -n "$p" ]; do 
      	kill -9 $p
-		p=$(ps |grep 'wget -O /tmp/dummy' |grep -v grep |awk '{print $1}')
+		p=$(ps |grep 'curl -o /tmp/dummy' |grep -v grep |awk '{print $1}')
 	done
 
 	(
 # TOOLCHANGE	
 #		wget -t 1  -T 20 -O /tmp/dummy "http://${curr_GATEWAY}:8080/xaa"
-		wget -t 1  -T 20 -O /tmp/dummy "http://${curr_GATEWAY}:80/xaa"
+		curl -o /tmp/dummy --retry 1 --connect-timeout 20 -s -w '%{speed_download}' "http://${curr_GATEWAY}:80/xaa"
 	) > /tmp/ST_res 2>&1
 
 	if [ "$?" -eq 0 ] ; then 
-		NTR=$(cat /tmp/ST_res |tail -2 |grep dummy |awk '{print $3 "-" $4}' |sed "s/(//g" |sed "s/)//g")
+		NTR=$(cat /tmp/ST_res)
 		else
 		NTR=0
 	fi
 }
 
 compute_bandwidth() {
-	NTR=$(echo $NTR |tr [.] [,])
-	if echo $NTR |grep -q KB ; then
-		numeric_ntr=${NTR%%-KB/s} 
-		m="8.2"  #1,024 (8.192)
-		elif echo $NTR |grep -q MB ; then
-		numeric_ntr=${NTR%%-MB/s}
-		m="8388" #1,048,576 (8.388.608)	
-	fi
-	bandwidth=$(echo $numeric_ntr $m | awk '{printf("%d\n", ($1 * $2))}')
+	# curl speed_download output in Bytes/sec. Convert to Kbits/sec.
+	bandwidth=$(echo $NTR | awk '{printf("%d\n", ($1 / 128))}')
 	logger -st ${0##*/} "current bandwidth [${curr_GATEWAY}] ${bandwidth} Kbps"
 }
 

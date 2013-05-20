@@ -11,16 +11,16 @@ rm -f /tmp/topUsers
 is_unknown="U"
 users=0 ; kbup=0 ; kbdown=0 ; TOP_USERS=
 
-echo "${users} ${kbup} ${kbdown}" >> $STATUS_FILE
-echo "${TOP_USERS}" >> $STATUS_FILE
+echo -n "${users} ${kbup} ${kbdown}" >> $STATUS_FILE
+echo -n "${TOP_USERS}" >> $STATUS_FILE
 
 $(/usr/bin/ndsctl clients > /tmp/nds_clients)
 [ $? -ne 0 ] && SHOULD_EXIT=1
 [ 0 -eq "$(cat /tmp/nds_clients)" ] && SHOULD_EXIT=1
 
 [ 1 -eq "$SHOULD_EXIT" ] && {
-	echo "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
-	echo "&top_users=${TOP_USERS}" >> $STATUS_FILE
+	echo -n "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
+	echo -n "&top_users=${TOP_USERS}" >> $STATUS_FILE
 
 	return
 }
@@ -74,7 +74,7 @@ while read riga ; do
 		done < /tmp/dhcpd.clients
 	}
 done < /tmp/nds_clients_h
-echo "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
+echo -n "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
 
 if [ -e /tmp/topUsers ] ; then
 	sort -r /tmp/topUsers |head -n 10 > /tmp/sort_topUsers
@@ -82,7 +82,5 @@ if [ -e /tmp/topUsers ] ; then
 		TOP_USERS="${TOP_USERS}+${riga}" 
 	done < /tmp/sort_topUsers
 fi	
-echo "&top_users=${TOP_USERS}" >> $STATUS_FILE
+echo -n "&top_users=${TOP_USERS}" >> $STATUS_FILE
 #
-
-

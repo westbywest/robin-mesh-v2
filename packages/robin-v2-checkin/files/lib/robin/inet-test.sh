@@ -3,6 +3,7 @@
 <<COPYRIGHT
 
 Copyright (C) 2010 Antonio Anselmi <tony.anselmi@gmail.com>
+Modified 2013 Ben West <ben@gowasabi.net>
 
 This program is free software; you can redistribute it and/or
 modify it under the terms of version 2 of the GNU General Public
@@ -36,12 +37,12 @@ while [  $cnt -lt 3 ]; do
 done
 
 TEST_DOMAIN="checkin.cloudtrax.com www.google.com www.yahoo.com www.alltheweb.com"
-wget_options="-t 1 -T 5 --spider"
+curl_options="--retry 1 --connect-timeout 5 -o /dev/null"
 
 passed() {
 	case $1 in
 		1) testWas="traceroute";;
-		2) testWas="wget test domains";;
+		2) testWas="curl test domains";;
 		3) testWas="fping test domains";;
 		4) testWas="fping: $2 $3 $4";;
 	esac
@@ -59,9 +60,9 @@ logger -st ${0##*/} "failed (f)pinging $TEST_IP";
 #...........wget - spider
 nTest=2
 for DOMAIN in $TEST_DOMAIN ; do
-	wget $wget_options "http://${DOMAIN}" > /dev/null 2>&1 && passed $nTest
+	curl $curl_options "http://${DOMAIN}" > /dev/null 2>&1 && passed $nTest
 done
-logger -st ${0##*/} "failed wgetting $TEST_DOMAIN ";
+logger -st ${0##*/} "failed curling $TEST_DOMAIN ";
 
 #we don't have internet
 echo "1"

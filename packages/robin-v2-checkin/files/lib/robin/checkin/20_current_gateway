@@ -5,18 +5,18 @@ STATUS_FILE=/var/run/status_file
 echo "get current gateway, hops along the path, RTT..."
 
 if [ 1 -eq "$(uci get node.general.role)" ] 
-	then
+then
 	GATEWAY=$(ip route | awk '/default via/ {print $3}') 
 
-	echo "&role=G&gateway=${GATEWAY}&gw-qual=255&routes=${GATEWAY}&hops=1&RTT=0" >> $STATUS_FILE
+	echo -n "&role=G&gateway=${GATEWAY}&gw-qual=255&routes=${GATEWAY}&hops=1&RTT=0" >> $STATUS_FILE
 
-	else
+else
 	gw_ip=$(cat /tmp/current_gateway |awk '{print $1}') 
 	gw_info=$(cat /tmp/current_gateway |awk '{print "&gateway="$1"&gw-qual="$2"&hops="$3"&routes="$4}') 
-	echo $gw_info >> $STATUS_FILE 
+	echo -n $gw_info >> $STATUS_FILE 
 
 	busybox ping -c1 $gw_ip > /tmp/ping
 	RTT=$(grep -i 'round-trip' /tmp/ping |awk -F "/" '{print $5}' |awk '{print $1}')	
-	echo "&RTT=${RTT}" >> $STATUS_FILE
-	fi
+	echo -n "&RTT=${RTT}" >> $STATUS_FILE
+fi
 #

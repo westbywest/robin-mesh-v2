@@ -37,7 +37,7 @@ define Package/robin-v2-checkin/Default
   TITLE:=ROBIN Mesh Network Dashboard Checkin
   URL:=http://wiki-robin.meshroot.com/
   MAINTAINER:=Antonio Anselmi <tony.anselmi@gmail.com>, et al
-  DEPENDS:=+dnsmasq +tcpdump-mini +fping +wget +uhttpd
+  DEPENDS:=+dnsmasq +tcpdump-mini +fping +curl +uhttpd +wireless-tools
 endef
 
 # nodogsplash dependency commented out

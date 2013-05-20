@@ -69,7 +69,7 @@ while read riga ; do
 		case $SECTION_OPTION in
 			page) 
 				cd /tmp
-				wget $VALUE -O /tmp/splash.html
+				curl -L -# -o /tmp/splash.html $VALUE
 				[ "$?" -ne 0 ] && { uci set flags.status.RR="1"; uci commit flags; } 
 				if [ -e /tmp/splash.html ] ; then
 					if cat /tmp/splash.html |grep "$authtarget" > /dev/null ; then
@@ -85,13 +85,14 @@ while read riga ; do
 					first_occurence=0
 				}
 				URL=$(echo $riga |awk -F ! '{pippo = substr($1,7) ; print pippo}')
-				wget -t 3 -T 60 "$URL"
+				curl -L -# --retry 3 --connect-timeout 60 "$URL"
 				[ "$?" -ne 0 ] && { uci set flags.status.RR="1"; uci commit flags; } 
 			;;
 					
 			file)
 				cd /etc/nodogsplash/htdocs/pages
-				wget -N $VALUE 
+				FILENAME=${VALUE##*/}
+				curl -L -# -z "$FILENAME" $VALUE 
 				[ "$?" -ne 0 ] && { uci set flags.status.RR="1"; uci commit flags;} 
 				;;
 		esac

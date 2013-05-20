@@ -14,8 +14,8 @@ UNIX_SOCKET=$(find /var/run/chilli* |grep 'sock')
 chilli_query -s $UNIX_SOCKET list > /tmp/chilli_clients
 
 [ -s /tmp/chilli_clients ] || {
-	echo "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
-	echo "&top_users=${TOP_USERS}" >> $STATUS_FILE
+	echo -n "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
+	echo -n "&top_users=${TOP_USERS}" >> $STATUS_FILE
 
 	return
 }
@@ -49,7 +49,7 @@ while read RECORD ; do
 	fi
            
 done < /tmp/chilli_clients
-echo "&users=${users}&kbup=${tot_kb_up}&kbdown=${tot_kb_down}" >> $STATUS_FILE
+echo -n "&users=${users}&kbup=${tot_kb_up}&kbdown=${tot_kb_down}" >> $STATUS_FILE
 		
 if [ -e /tmp/topUsers ] ; then
 	sort -r /tmp/topUsers |head -n 10 > /tmp/sort_topUsers
@@ -57,5 +57,5 @@ if [ -e /tmp/topUsers ] ; then
 		TOP_USERS="${TOP_USERS}+${riga}" 
 	done < /tmp/sort_topUsers
 fi
-echo "$&top_users=${TOP_USERS}" >> $STATUS_FILE
+echo -n "$&top_users=${TOP_USERS}" >> $STATUS_FILE
 #

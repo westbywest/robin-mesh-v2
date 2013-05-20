@@ -44,6 +44,6 @@ SSID=$(uci get wireless.@wifi-iface[1].ssid)
 	uci commit flags
 }
 
-echo "ip=${IP}&mac=${MAC_TO_SEND}&robin=${ROBIN_VER}&batman=${RA_VER}" > $STATUS_FILE
-echo "&ssid=${SSID}&pssid=${PSSID}&RR=${RR}">> $STATUS_FILE
+echo -n "ip=${IP}&mac=${MAC_TO_SEND}&robin=${ROBIN_VER}&batman=${RA_VER}" > $STATUS_FILE
+echo -n "&ssid=${SSID}&pssid=${PSSID}&RR=${RR}">> $STATUS_FILE
 #

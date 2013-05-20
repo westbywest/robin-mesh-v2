@@ -18,11 +18,10 @@ HOURS=$(expr $DIFF / 3600)
 DIFF=$(expr $DIFF \% 3600)
 MIN=$(expr $DIFF / 60)
 
-printf "%0dd:%0dh:%02dm\n\r" $DAYS $HOURS $MIN > /tmp/now
-UPTIME=$(cat /tmp/now)
+UPTIME=`printf "%0dd:%0dh:%02dm" $DAYS $HOURS $MIN`
+echo $UPTIME > /tmp/now
 
-LAST_REBOOT=$(cat /etc/reboot_reasons |tail -1 |awk '{print $1}')
+LAST_REBOOT=$(cat /etc/reboot_reasons |tail -1 |awk '{printf "%s", $1}')
 
-echo "&memfree=${MEMFREE}&load=${LOAD}&uptime=${UPTIME}-${LAST_REBOOT}" >> $STATUS_FILE
+echo -n "&memfree=${MEMFREE}&load=${LOAD}&uptime=${UPTIME}-${LAST_REBOOT}" >> $STATUS_FILE
 #
-

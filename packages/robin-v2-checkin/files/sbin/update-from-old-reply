@@ -25,7 +25,7 @@ COPYRIGHT
 ask_gw() { 
 	curr_GATEWAY=$(cat /tmp/current_gateway | awk '{print $1}')
 	(
-		wget -t 1 -T 20 -O /tmp/old_reply "http://${curr_GATEWAY}:8080/old_reply"
+		curl --retry 1 --connect-timeout 20 -o /tmp/old_reply "http://${curr_GATEWAY}:8080/old_reply"
 	) 2>&1
 
 	[ "$?" -eq 0 ] && cp -f /tmp/old_reply $OLD_REPLY

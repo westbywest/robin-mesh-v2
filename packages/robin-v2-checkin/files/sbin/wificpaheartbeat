@@ -54,7 +54,7 @@ robin_ver=$(cat /etc/robin_version)
 WDIR=/tmp
 LOG=/tmp/wificpa_update.log 
 rx_file=$WDIR/wificpa_received 
-wget_options="-t 1 -T 60"
+curl_options="--retry 1 --connect-timeout 60 -# -v -L"
 
 rm -f $rx_file
 
@@ -65,14 +65,14 @@ case $(uci get chilli.agent.service) in
 		case $(uci get node.general.role) in
 			1)
 				node_type="gateway"
-				wget $wget_options  "http://controlpanel.wifi-cpa.com/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Gateway&ver=$robin_ver&node_type=$node_type" -o $LOG -O $rx_file
+				curl $curl_options  "http://controlpanel.wifi-cpa.com/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Gateway&ver=$robin_ver&node_type=$node_type" -o $rx_file 2> $LOG
 				EXIT_CODE=$?
 				write_log $EXIT_CODE
 			;;
  		
 			0)
 				node_type="client"
-				wget $wget_options  "http://controlpanel.wifi-cpa.com/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Repeater&ver=$robin_ver&node_type=$node_type" -o $LOG -O $rx_file
+				curl $curl_options  "http://controlpanel.wifi-cpa.com/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Repeater&ver=$robin_ver&node_type=$node_type" -o $rx_file 2> $LOG
 				EXIT_CODE=$?	
 				write_log $EXIT_CODE		
 			;;
@@ -83,14 +83,14 @@ case $(uci get chilli.agent.service) in
 		case $(uci get node.general.role) in
 			1)
 				node_type="gateway"
-				wget $wget_options  "http://"$uamserver"/WiFi-CPA/ControlPanel/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Gateway&ver=$robin_ver&node_type=$node_type" -o $LOG -O $rx_file
+				curl $curl_options  "http://"$uamserver"/WiFi-CPA/ControlPanel/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Gateway&ver=$robin_ver&node_type=$node_type" -o $rx_file 2> $LOG
 				EXIT_CODE=$?
 				write_log $EXIT_CODE
                 ;;
  
 			0)
 				node_type="client"
-				wget $wget_options  "http://"$uamserver"/WiFi-CPA/ControlPanel/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Repeater&ver=$robin_ver&node_type=$node_type" -o $LOG -O $rx_file
+				curl $curl_options  "http://"$uamserver"/WiFi-CPA/ControlPanel/heartbeat.php?router_name="$router_name"&nasid="$nasid"&wan_ip="$wanip"&wan_ssid="$wanssid"&mac=00-"$mac"&wanmac=00"$wanmac"&lanmac=00"$lanmac"&model=Repeater&ver=$robin_ver&node_type=$node_type" -o $rx_file 2> $LOG
 				EXIT_CODE=$?
 				write_log $EXIT_CODE
 			;;
