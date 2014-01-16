@@ -3,6 +3,8 @@
 
 echo "checking captive portal..." 
 cp_HANDLER=$(uci get cp_switch.main.which_handler)
+cp_IFACE=$(uci get cp_switch.main.iface)
+cp_IFACE_MAC=$(ifconfig "$cp_IFACE" | grep HWaddr | awk '{print $5}'| sed y/:/-/)
 
 [ "$cp_HANDLER" -gt 0 ] && {
 	max_threads=$(uci get cp_switch."handler_${cp_HANDLER}".max_threads)
@@ -21,5 +23,22 @@ cp_HANDLER=$(uci get cp_switch.main.which_handler)
 # READONLY
 #	[ "$threads" -eq 0 ] && /sbin/do_reboot $REASON 
 	[ "$threads" -eq 0 ] && logger 50_captive portal triggers reboot $REASON 
-}
-#
+
+	#If chilli is portal, check that it is accepting DHCP lease requests
+	[ "$cp_HANDLER" -ge 4 -a "$cp_HANDLER" -le 6 -a "$threads" -gt 0 ] && {
+		#Issue dummy DHCP request
+		udhcpc -p /var/run/udhcpc-dummy.pid -s /bin/true -n -q -f -t 2 -T 10 -A 10 -i $cp_IFACE
+
+		#Now see if cp_IFACE_MAC appears in chilli client list
+		UNIX_SOCKET=$(find /var/run -name *sock |grep 'chilli')
+		CHLLI_DHCP_WORKING=$(chilli_query -s $UNIX_SOCKET list| grep $cp_IFACE_MAC)
+
+		if [ -n $CHILLI_DHCP_WORKING ]; then
+			#Logout cp_IFACE_MAC so as not to clutter client list
+			chilli_query -s $UNIX_SOCKET logout $cp_IFACE_MAC
+		else
+			logger "50_captive_portal restarts chilli, not issuing DHCP leases"
+			/etc/init.d/coovachilli_restart
+		fi
+	}
+}     
