@@ -7,8 +7,8 @@ echo "get cpu stats..."
 MEMFREE=$(free |grep 'Mem:' |awk '{print $4}')
 
 LOAD=$(uptime | awk -F'average:' '{gsub(/[ \t]+/,"",$2);print $2}')
-	
-TIMEB=$(grep btime /proc/stat | awk '{print $2'})
+
+TIMEB=$(grep btime /proc/stat | awk '{print $2}')
 TIMENOW=$(date +"%s")
 
 DIFF=$(expr $TIMENOW - $TIMEB)
