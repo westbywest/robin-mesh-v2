@@ -36,7 +36,7 @@ while [  $cnt -lt 3 ]; do
 	let cnt=cnt+1 
 done
 
-TEST_DOMAIN="checkin.cloudtrax.com www.google.com www.yahoo.com www.alltheweb.com"
+TEST_DOMAIN="dashboard.cloudtrax.com www.google.com www.yahoo.com www.alltheweb.com"
 curl_options="--retry 1 --connect-timeout 5 -o /dev/null"
 
 passed() {

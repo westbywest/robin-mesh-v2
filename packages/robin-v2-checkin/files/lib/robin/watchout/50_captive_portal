@@ -41,4 +41,5 @@ cp_IFACE_MAC=$(ifconfig "$cp_IFACE" | grep HWaddr | awk '{print $5}'| sed y/:/-/
 			/etc/init.d/coovachilli_restart
 		fi
 	}
-}     
+}
+#
