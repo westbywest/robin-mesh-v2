@@ -57,5 +57,5 @@ if [ -e /tmp/topUsers ] ; then
 		TOP_USERS="${TOP_USERS}+${riga}" 
 	done < /tmp/sort_topUsers
 fi
-echo -n "$&top_users=${TOP_USERS}" >> $STATUS_FILE
+echo -n "&top_users=${TOP_USERS}" >> $STATUS_FILE
 #
