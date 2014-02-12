@@ -9,6 +9,31 @@ IP=$(uci get node.general.IP_mesh)
 
 robin_version=$(cat /etc/robin_version)
 
+# Percent-encoding special chars for URLs, via simple lookup table
+percent_encode() {
+	echo $1 | sed -e 's|%|%25|g' \
+		-e 's|!|%21|g' \
+		-e 's|#|%23|g' \
+		-e 's|\$|%24|g' \
+		-e 's|&|%26|g' \
+		-e "s|'|%27|g" \
+		-e 's|(|%28|g' \
+		-e 's|)|%29|g' \
+		-e 's|*|%2A|g' \
+		-e 's|+|%2B|g' \
+		-e 's|,|%2C|g' \
+		-e 's|/|%2F|g' \
+		-e 's|:|%3A|g' \
+		-e 's|;|%3B|g' \
+		-e 's|=|%3D|g' \
+		-e 's|?|%3F|g' \
+		-e 's|@|%40|g' \
+		-e 's|\[|%5B|g' \
+		-e 's|]|%5D|g' \
+		-e 's| |%20|g'
+}
+
+
 echo "get node status..."
 rm -f $STATUS_FILE
 
@@ -25,7 +50,7 @@ ra_signature="O"
 RA_VER=$(cat /etc/olsr_version)
 
 ROBIN_VER="${robin_version}/${cp_name}${ra_signature}"
-	
+
 PSSID="-none-"
 # CONFIGCHANGE
 #case $(uci get node.general.ethPorts) in
@@ -38,6 +63,10 @@ PSSID="-none-"
 #esac
 SSID=$(uci get wireless.@wifi-iface[1].ssid)
 [ "$(uci get mesh.Myap.up)" -eq 1 ] && PSSID=$(uci get wireless.@wifi-iface[2].ssid)
+
+# Need to percent-encode the SSIDs for whitespace chars
+SSID=$(percent_encode "$SSID")
+PSSID=$(percent_encode "$PSSID")
 
 [ 1 -eq "$RR" ] && {
 	uci set flags.status.RR="0"
