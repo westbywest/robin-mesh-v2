@@ -10,9 +10,14 @@ rm -f /tmp/topUsers
 users=0 ; kbup=0 ; kbdown=0 ; top_users=
 tot_kb_up=0 ; tot_kb_down=0 
 
-UNIX_SOCKET=$(find /var/run/chilli* |grep 'sock')
-chilli_query -s $UNIX_SOCKET list > /tmp/chilli_clients
+if [ -e /var/run/chilli*sock ]; then
+	UNIX_SOCKET=$(find /var/run/chilli* |grep 'sock')
+	chilli_query -s $UNIX_SOCKET list > /tmp/chilli_clients
+else
+	rm -f /tmp/chilli_clients && touch /tmp/chilli_clients
+fi
 
+# If no chilli clients, nothing to do
 [ -s /tmp/chilli_clients ] || {
 	echo -n "&users=${users}&kbup=${kbup}&kbdown=${kbdown}" >> $STATUS_FILE
 	echo -n "&top_users=${TOP_USERS}" >> $STATUS_FILE
