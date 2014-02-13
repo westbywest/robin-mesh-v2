@@ -38,7 +38,7 @@ cp_IFACE_MAC=$(ifconfig "$cp_IFACE" | grep HWaddr | awk '{print $5}'| sed y/:/-/
 			chilli_query -s $UNIX_SOCKET logout $cp_IFACE_MAC
 		else
 			logger "50_captive_portal restarts chilli, not issuing DHCP leases"
-			/etc/init.d/coovachilli_restart
+			/etc/init.d/coovachilli restart
 		fi
 	}
 }
