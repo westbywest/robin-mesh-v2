@@ -1,7 +1,7 @@
 config general services
 	option name_srv	'208.67.222.222'
 	option upstream	'0'
-	option updt_srv     'checkin.cloudtrax.com'
+	option updt_srv     'dashboard.cloudtrax.com'
 	option checker      'checkin-batman.php'
 	option upgd_srv	''
 	option beat_srv	''
