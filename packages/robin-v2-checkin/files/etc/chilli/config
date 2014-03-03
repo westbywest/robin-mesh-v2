@@ -1,0 +1,32 @@
+HS_UAMHOMEPAGE="http://\$HS_UAMLISTEN:\$HS_UAMPORT/www/coova.html"
+HS_LOC_NAME=$(uci get system.@system[0].hostname)
+HS_UAMPORT=$(chilli.agent.uamport)
+HS_SERVICE=$(chilli.agent.service)
+HS_RADIUSSERVER1=$(uci get chilli.agent.radiusserver1)
+HS_RADIUSSERVER2=$(uci get chilli.agent.radiusserver2)
+HS_UAMSERVER=$(uci get chilli.agent.uamserver)
+HS_UAMURL=$(uci get chilli.agent.uamurl)
+HS_UAMSECRET=$(uci get chilli.agent.uamsecret)
+HS_RADIUSSECRET=$(uci get chilli.agent.radiussecret)
+HS_RADIUSNASID=$(uci get chilli.agent.radiusnasid)
+HS_ADMPWD=$(uci get chilli.agent.adminpwd)
+HS_UAMDOMAIN=$(uci get chilli.agent.uamdomain)
+HS_MODE=hotspot
+HS_TYPE=chillispot
+HS_LANIF=br-ap1
+HS_NETWORK=$(ipcalc.sh `uci get network.ap1.ipaddr` 255.255.255.0 | awk -F'NETWORK=' '/NETWORK/ {print $2}')
+HS_NETMASK=255.255.255.0
+HS_SSID=$(uci get wireless.@wifi-iface[2].ssid)
+HS_NASMAC=$(uci get node.general.wlanMAC | tr a-z A-Z | sed s/:/-/g)
+HS_DNS1=$(uci get network.ap1.ipaddr)
+HS_UAMLISTEN=$(uci get network.ap1.ipaddr)
+HS_NASID="${HS_RADIUSNASID:-$(uci get system.@system[0].hostname)}"
+HS_RADIUS="$HS_RADIUSSERVER1"
+HS_RADIUS2="$HS_RADIUSSERVER2"
+HS_RADSECRET="$HS_RADIUSSECRET"
+HS_ANYIP="${HS_ANYIP:-off}"
+HS_MACAUTH="${HS_MACAUTH:-on}"
+HS_UAMDOMAINS="$HS_UAMDOMAIN $HS_UAMDOMAINS"
+HS_UAMSERVER_URL=$(echo $HS_UAMSERVER|awk -F'://' '{print (NF == 1) ? "http://" $1 : $1 "://" $2;}')
+HS_UAMSERVER=$(echo $HS_UAMSERVER|awk -F'://' '{print (NF == 1) ? $1 : $2;}')
+HS_UAMFORMAT="\$HS_UAMSERVER_URL\$HS_UAMURL\$HS_UAMURLEXTRAS"

@@ -1,0 +1,57 @@
+#!/bin/sh /etc/rc.common 
+# description: Startup/shutdown script for coova-chilli captive portal
+# RO.B.IN - 2007 by Antonio Anselmi <a.anselmi-at-oltrelinux-dot-com>
+# Modifications 2013 by Ben West <ben@gowasabi.net>
+
+#/etc/init.d/chilli
+. /etc/chilli/functions
+
+START=99
+STOP=15
+ME="chilli"
+
+check_required
+
+start () {
+#	/etc/cp.conf/chilli
+	logger -s -t  "$ME" "Starting... "
+	
+	insmod tun >/dev/null 2>&1
+	writeconfig
+	radiusconfig
+
+	ifconfig $HS_LANIF 0.0.0.0
+
+	if [ 1 -eq "$(uci get management.enable.proxy)" ] ; then
+		PROXY_IP=$(uci get node.general.IP_ap |awk -F / '{print $1}')
+		PROXY_PORT="8888"
+		/usr/sbin/chilli --postauthproxy $PROXY_IP --postauthproxyport $PROXY_PORT
+	else
+		/usr/sbin/chilli
+	fi
+
+	if [ "$?" -eq 0 ] ; then
+		logger -s -t  "$ME" "started"
+	else
+		logger -s -t  "$ME" "start exited with non 0 status"
+	fi
+}
+    
+
+stop () {
+	logger -s -t  "$ME" "Stopping... "
+     
+	if [ -f /var/run/chilli.pid ] ; then 
+		kill $(cat /var/run/chilli.pid)
+		rm -f /var/run/chilli.pid
+	fi
+	killall chilli
+	
+	if [ "$?" -eq 0 ] ; then
+		logger -s -t  "$ME" "stopped"
+	else
+		logger -s -t  "$ME" "stop exited with non 0 status"
+	fi
+}
+
+#
