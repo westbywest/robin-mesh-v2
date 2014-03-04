@@ -14,7 +14,34 @@ while read record ; do
 		'Station') 
 			STATION_MAC=$(echo $record |awk '{print $2}') 
 			STATION_IP=$(grep -i $STATION_MAC /etc/update/network_nodes |awk '{print $2}')
-			;;
+			# If multiple VIFs, MAC reported in station dump may be hardware MAC
+			# with 2, 4, 6, etc, added to 1st octet
+			[ -z "$STATION_IP" ] && {
+				OCTET=$(echo $STATION_MAC | cut -d ":" -f1)
+				OCTET=$(printf "%d" 0x${OCTET})
+				OCTET=$(printf "%02x" $(( $OCTET - 2 )))
+				REST=$(echo $STATION_MAC | cut -d ":" -f2-6)
+				STATION_MAC="${OCTET}:${REST}"
+				STATION_IP=$(grep -i $STATION_MAC /etc/update/network_nodes |awk '{print $2}')
+			}
+			[ -z "$STATION_IP" ] && {
+                                OCTET=$(echo $STATION_MAC | cut -d ":" -f1)
+                                OCTET=$(printf "%d" 0x${OCTET})
+                                OCTET=$(printf "%02x" $(( $OCTET - 2 )))
+                                REST=$(echo $STATION_MAC | cut -d ":" -f2-6)
+                                STATION_MAC="${OCTET}:${REST}"
+                                STATION_IP=$(grep -i $STATION_MAC /etc/update/network_nodes |awk '{print $2}')
+                        }
+                        [ -z "$STATION_IP" ] && {
+                                OCTET=$(echo $STATION_MAC | cut -d ":" -f1)
+                                OCTET=$(printf "%d" 0x${OCTET})
+                                OCTET=$(printf "%02x" $(( $OCTET - 2 )))
+                                REST=$(echo $STATION_MAC | cut -d ":" -f2-6)
+                                STATION_MAC="${OCTET}:${REST}"
+                                STATION_IP=$(grep -i $STATION_MAC /etc/update/network_nodes |awk '{print $2}')
+                        }
+                        ;;
+				
 		'signal:') 
 			[ -n "$STATION_IP" ] && {
 				STATION_dBm=$(echo $record |awk '{print $2}' |sed s/'-'//g) 
