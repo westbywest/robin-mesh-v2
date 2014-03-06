@@ -45,7 +45,7 @@ while read record ; do
 		'signal:') 
 			[ -n "$STATION_IP" ] && {
 				STATION_dBm=$(echo $record |awk '{print $2}' |sed s/'-'//g) 
-  				conv=$(echo $STATION_dBm | awk "$CONVERT_TO_RSSI")
+  				conv=$(echo $STATION_dBm | awk "$CONVERT_TO_RSSI" | tr -d " ")
 				NEIG="${NEIG}$STATION_IP;"
 				RSSI="${RSSI}$conv;"
 			}
