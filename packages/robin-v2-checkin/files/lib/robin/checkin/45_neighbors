@@ -19,12 +19,14 @@ ranks="" ; nbs=""
 #echo "/link" |nc 127.0.0.1 8090 |awk 'FNR>5' > /tmp/links
 echo "/link" |nc 127.0.0.1 2006 |awk 'FNR>5' > /tmp/links
 while read record ; do
-	nbs="${nbs}$(echo $record |awk '{print $2}');"
-	rank=$(echo $record | awk '{ printf( "%i\n", ($4*$5*255) )}')	
-	ranks="${ranks}$rank;"    		
+        if [ -n "$record" ]; then
+		nbs="${nbs}$(echo $record |awk '{print $2}');"
+		rank=$(echo $record | awk '{ printf( "%i\n", ($4*$5*255) )}')
+		ranks="${ranks}$rank;"
+	fi
 done < /tmp/links
-     
+
 nbs="${nbs}z" ; nbs_=$(echo $nbs |sed "s/;z//g")
 ranks="${ranks}z" ; ranks_=$(echo $ranks |sed "s/;z//g")
-	
+
 echo -n "&nbs=${nbs_}&rank=${ranks_}" >> $STATUS_FILE
