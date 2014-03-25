@@ -25,9 +25,9 @@ start () {
 	if [ 1 -eq "$(uci get management.enable.proxy)" ] ; then
 		PROXY_IP=$(uci get node.general.IP_ap |awk -F / '{print $1}')
 		PROXY_PORT="8888"
-		/usr/sbin/chilli --postauthproxy $PROXY_IP --postauthproxyport $PROXY_PORT
+		/usr/sbin/chilli --mtu 1480 --postauthproxy $PROXY_IP --postauthproxyport $PROXY_PORT
 	else
-		/usr/sbin/chilli
+		/usr/sbin/chilli --mtu 1480
 	fi
 
 	if [ "$?" -eq 0 ] ; then
