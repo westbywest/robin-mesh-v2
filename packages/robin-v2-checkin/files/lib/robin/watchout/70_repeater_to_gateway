@@ -1,20 +1,36 @@
 #!/bin/sh
 #repeater_to_gateway
+timestamp=$(date +%F-%H%M)
 
 . /lib/robin/last-hop.sh
 
-olsr_gateway_test () {	
+olsr_gateway_test () {
+
 	if ip route get 1.2.3.4 > /dev/null 2>&1 ; then
-		getLastHop 
-		# this is a workaround to find last-hop gateway 
-		#result is evaluated by looking at LAST_HOP provided by getLastHop()
-		#if LAST_HOP value is "0" then getLastHop() failed (see the code of the function)
+		getLastHop
+		# this is a workaround to find last-hop gateway
+		# result is evaluated by looking at LAST_HOP provided by getLastHop()
+		# if LAST_HOP value is "0" then getLastHop() failed (see the code of the
+		#  function)
 		getLastHop_res=$(cat /tmp/current_gateway |awk '{print $1}')
 		[ "0" == "$getLastHop_res" ] && return 1 || return 0
 
 	else
 		return 1
-	fi		
+	fi
+}
+
+olsr_dns_test () {
+
+	# Check that DNS resolution works.  SmartGateway sometimes lets ping tests
+	# work but doesn't pass all other traffic.
+
+	test_domains="dashboard.cloudtrax.com www.google.com www.yahoo.com"
+	curl_options="--retry 1 --connect-timeout 10 --max-time 20 -o /dev/null"
+	for test_domain in $test_domains ; do
+		curl $curl_options "http://${test_domain}" > /dev/null 2>&1 && return 0
+	done
+	return 1
 }
 
 [ "$(uci get node.general.role)" -eq 0 ] && {
@@ -23,21 +39,35 @@ olsr_gateway_test () {
 
 	echo "checking olsrd gateway..."
 	olsr_gateway_test
-	gateway_test_result=$? 
+	gateway_test_result=$?
 
-	if [ "$gateway_test_result" -eq 0 ] ; then	
+	if [ "$gateway_test_result" -eq 0 ] ; then
 		cat /tmp/current_gateway
 		rm -f /tmp/w4n.failures
-		return 0
 
 	else
 		rm -f /tmp/current_gateway
-		echo "mark" >> /tmp/w4n.failures
+		echo "mark $timestamp" >> /tmp/w4n.failures
 		# READONLY
 		# [ "$(cat /tmp/w4n.failures |wc -l)" -gt "$MAX_ALLOWED_FAILS" ] && /sbin/do_reboot $REASON
-		[ "$(cat /tmp/w4n.failures |wc -l)" -gt "$MAX_ALLOWED_FAILS" ] && logger 70_repeater_to_gate triggers reboot $REASON
+		[ "$(cat /tmp/w4n.failures |wc -l)" -gt "$MAX_ALLOWED_FAILS" ] && logger 70_repeater_to_gateway triggers reboot $REASON
+		return 1
+	fi
+
+	echo "checking olsrd dns..."
+	olsr_dns_test
+	dns_test_result=$?
+
+	if [ "$dns_test_result" -eq 0 ] ; then
+		#rm -f /tmp/dns.failures
+		sleep 0 #noop
+	else
+		echo "mark $timestamp" >> /tmp/dns.failures
+		/etc/init.d/olsrd restart
+		logger 70_repeater_to_gateway triggers olsrd restart after successful gateway but DNS resolution failure 
 		return 1
 	fi
 }
-#
 
+return 0
+#
