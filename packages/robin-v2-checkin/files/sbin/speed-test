@@ -39,9 +39,9 @@ download_test_file() {
 # TOOLCHANGE	
 #		wget -t 1  -T 20 -O /tmp/dummy "http://${curr_GATEWAY}:8080/xaa"
 		if [ "$speedtest_url" ]; then
-			curl -o /tmp/dummy --retry 1 --connect-timeout 20 -s -w '%{speed_download}' "${speedtest_url}"
+			curl -o /tmp/dummy --retry 1 --max-time 60 --connect-timeout 20 -s -w '%{speed_download}' "${speedtest_url}"
 		else
-			curl -o /tmp/dummy --retry 1 --connect-timeout 20 -s -w '%{speed_download}' "http://${curr_GATEWAY}:80/xaa"
+			curl -o /tmp/dummy --retry 1 --max-time 60 --connect-timeout 20 -s -w '%{speed_download}' "http://${curr_GATEWAY}:80/xaa"
 		fi
 	) > /tmp/ST_res 2>&1
 
